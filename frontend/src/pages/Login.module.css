@@ -1,0 +1,77 @@
+.page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, #1d4ed8 0, transparent 28%),
+    var(--navy);
+}
+
+.panel {
+  width: min(420px, 100%);
+}
+
+.brand {
+  color: #fff;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.logo {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 14px;
+  border-radius: 16px;
+  background: var(--primary);
+  display: grid;
+  place-items: center;
+}
+
+.brand h1 {
+  font-size: 26px;
+  letter-spacing: -0.03em;
+}
+
+.brand p {
+  margin-top: 8px;
+  color: #93a4bb;
+  font-size: 14px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 14px;
+}
+
+.card label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.card input {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 15px;
+}
+
+.card input:focus {
+  outline: 2px solid rgba(29, 78, 216, 0.2);
+  border-color: var(--primary);
+}
+
+.error {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+}

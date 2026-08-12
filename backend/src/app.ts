@@ -1,0 +1,45 @@
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import { authRouter } from "./routes/auth.js";
+import { dashboardRouter } from "./routes/dashboard.js";
+import { deliveriesRouter } from "./routes/deliveries.js";
+import { scanRouter } from "./routes/scan.js";
+import { historyRouter } from "./routes/history.js";
+import { profileRouter } from "./routes/profile.js";
+import { statsRouter } from "./routes/stats.js";
+import { requireAuth } from "./middleware/auth.js";
+import { errorHandler } from "./middleware/error.js";
+
+export function createApp() {
+  const app = express();
+
+  app.use(helmet());
+  app.use(
+    cors({
+      origin: process.env.FRONTEND_ORIGIN ?? "http://localhost:5174",
+      credentials: true,
+    }),
+  );
+  app.use(express.json());
+  app.use(morgan("dev"));
+
+  app.get("/api/health", (_req, res) => {
+    res.json({ ok: true, service: "delivery-app" });
+  });
+  app.get("/", (_req, res) => {
+    res.json({ service: "delivery-app", health: "/api/health" });
+  });
+
+  app.use("/api/auth", authRouter);
+  app.use("/api/dashboard", requireAuth, dashboardRouter);
+  app.use("/api/deliveries", requireAuth, deliveriesRouter);
+  app.use("/api/scan", requireAuth, scanRouter);
+  app.use("/api/history", requireAuth, historyRouter);
+  app.use("/api/profile", requireAuth, profileRouter);
+  app.use("/api/stats", requireAuth, statsRouter);
+
+  app.use(errorHandler);
+  return app;
+}

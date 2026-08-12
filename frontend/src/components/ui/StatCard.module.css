@@ -1,0 +1,45 @@
+.card {
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 18px 18px 16px;
+  min-height: 128px;
+}
+
+.icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+}
+
+.value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.label {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.blue .icon {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.green .icon {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.navy .icon {
+  background: #e8eef7;
+  color: var(--navy);
+}

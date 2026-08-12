@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.db
+*.db-journal
+backend/prisma/dev.db
+backend/qr-codes/*.png
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+coverage/

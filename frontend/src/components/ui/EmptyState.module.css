@@ -1,0 +1,26 @@
+.wrap {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--muted);
+}
+
+.icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #eef2f7;
+  color: var(--navy);
+}
+
+.wrap h3 {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.wrap p {
+  margin-top: 6px;
+  font-size: 14px;
+}

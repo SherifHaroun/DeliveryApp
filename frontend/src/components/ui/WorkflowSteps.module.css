@@ -1,0 +1,94 @@
+.steps {
+  list-style: none;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  margin: 0 0 16px;
+  padding: 12px 8px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.step {
+  flex: 1 1 0;
+  min-width: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  color: var(--muted);
+}
+
+.step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 11px;
+  left: calc(50% + 14px);
+  right: calc(-50% + 14px);
+  height: 2px;
+  background: var(--border);
+}
+
+.dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  background: #eef2f7;
+  color: var(--muted);
+  z-index: 1;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 650;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.done {
+  color: var(--success);
+}
+
+.done .dot {
+  background: var(--success);
+  color: #fff;
+}
+
+.done:not(:last-child)::after {
+  background: var(--success);
+}
+
+.active {
+  color: var(--primary);
+}
+
+.active .dot {
+  background: var(--primary);
+  color: #fff;
+}
+
+.todo .label {
+  color: var(--muted);
+}
+
+@media (max-width: 420px) {
+  .steps {
+    padding: 10px 4px;
+  }
+
+  .dot {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+
+  .label {
+    font-size: 9px;
+  }
+}
