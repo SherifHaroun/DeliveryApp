@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import { prisma } from "./lib/prisma.js";
 import { authRouter } from "./routes/auth.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { deliveriesRouter } from "./routes/deliveries.js";
@@ -25,8 +26,13 @@ export function createApp() {
   app.use(express.json());
   app.use(morgan("dev"));
 
-  app.get("/api/health", (_req, res) => {
-    res.json({ ok: true, service: "delivery-app", release: "2026-08-13" });
+  app.get("/api/health", async (_req, res) => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      res.json({ ok: true, service: "delivery-app", database: "connected", release: "2026-08-13" });
+    } catch {
+      res.status(503).json({ ok: false, service: "delivery-app", database: "disconnected" });
+    }
   });
   app.get("/", (_req, res) => {
     res.json({ service: "delivery-app", health: "/api/health" });

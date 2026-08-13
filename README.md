@@ -50,4 +50,8 @@ Set SMTP values in `backend/.env` to send real OTP emails. If SMTP is not config
 
 ## Environment
 
-Copy `backend/.env.example` to `backend/.env` (created automatically by seed/migrate if you use the defaults in that file).
+Copy `backend/.env.example` to `backend/.env`.
+
+The backend uses Prisma with PostgreSQL. Set `DATABASE_URL` to a Postgres connection string. On Railway, the Postgres plugin provides `DATABASE_URL` automatically — do not hardcode it.
+
+Production start runs `prisma migrate deploy` before the API, which creates the required tables.
