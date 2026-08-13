@@ -13,13 +13,40 @@ import { statsRouter } from "./routes/stats.js";
 import { requireAuth } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error.js";
 
+function isAllowedOrigin(origin: string) {
+  const configured = (process.env.FRONTEND_ORIGIN ?? "http://localhost:5174")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (configured.includes("*") || configured.includes(origin)) {
+    return true;
+  }
+
+  try {
+    const { hostname } = new URL(origin);
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return true;
+    }
+    return hostname === "vercel.app" || hostname.endsWith(".vercel.app");
+  } catch {
+    return false;
+  }
+}
+
 export function createApp() {
   const app = express();
 
   app.use(helmet());
   app.use(
     cors({
-      origin: process.env.FRONTEND_ORIGIN ?? "http://localhost:5174",
+      origin(origin, callback) {
+        if (!origin || isAllowedOrigin(origin)) {
+          callback(null, true);
+          return;
+        }
+        callback(null, false);
+      },
       credentials: true,
     }),
   );

@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import QRCode from "qrcode";
+import { DEMO_COURIER_EMAIL, ensureDemoCourier } from "../src/lib/demoUser.ts";
 
 const prisma = new PrismaClient();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -18,15 +19,8 @@ async function main() {
   const passwordHash = await bcrypt.hash("Courier123!", 10);
   const adminHash = await bcrypt.hash("Admin123!", 10);
 
-  const courier = await prisma.user.create({
-    data: {
-      email: "courier@delivery.local",
-      passwordHash,
-      fullName: "Karim Hassan",
-      phone: "+20 100 555 1200",
-      role: "COURIER",
-    },
-  });
+  await ensureDemoCourier();
+  const courier = await prisma.user.findUniqueOrThrow({ where: { email: DEMO_COURIER_EMAIL } });
 
   const otherCourier = await prisma.user.create({
     data: {
@@ -238,7 +232,7 @@ async function main() {
 
   const pending = cardDefs.filter((c) => c.status === "PENDING");
   console.log("Seed complete.");
-  console.log("Courier login: courier@delivery.local / Courier123!");
+  console.log("Courier login: courier / 123456");
   console.log("Pending QR tokens (scan these):");
   for (const card of pending) {
     console.log(`  ${card.token}  (${card.identifier})`);

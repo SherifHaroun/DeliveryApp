@@ -35,8 +35,8 @@ npm run dev
 
 Demo courier login:
 
-- Email: `courier@delivery.local`
-- Password: `Courier123!`
+- Email: `courier`
+- Password: `123456`
 
 ## Testing QR scan without a printed card
 

@@ -10,7 +10,7 @@ export function LoginPage() {
   const { user, loading, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState("courier@delivery.local");
+  const [email, setEmail] = useState("courier");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -49,7 +49,7 @@ export function LoginPage() {
           <label>
             Email
             <input
-              type="email"
+              type="text"
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
