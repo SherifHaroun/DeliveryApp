@@ -8,7 +8,6 @@ import { Countdown } from "../components/ui/Countdown";
 import { OtpInput } from "../components/ui/OtpInput";
 import { PageHeader } from "../components/ui/PageHeader";
 import { SuccessMark } from "../components/ui/SuccessMark";
-import { maskedCard } from "../lib/format";
 import styles from "./DeliveryDetail.module.css";
 
 export function DeliveryDetailPage() {
@@ -17,6 +16,7 @@ export function DeliveryDetailPage() {
   const [card, setCard] = useState<DeliveryCardType | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [tick, setTick] = useState(0);
 
@@ -34,12 +34,14 @@ export function DeliveryDetailPage() {
     if (!id) return;
     setBusy(true);
     setError(null);
+    setMessage(null);
     try {
       const result = await api<{ card: DeliveryCardType }>(`/api/deliveries/${id}/send-otp`, {
         method: "POST",
       });
       setCard(result.card);
       setCode("");
+      setMessage("OTP sent successfully");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong while sending the OTP.");
     } finally {
@@ -52,6 +54,7 @@ export function DeliveryDetailPage() {
     if (!id) return;
     setBusy(true);
     setError(null);
+    setMessage(null);
     try {
       const updated = await api<DeliveryCardType>(`/api/deliveries/${id}/verify-otp`, {
         method: "POST",
@@ -93,7 +96,7 @@ export function DeliveryDetailPage() {
       <div className={styles.successPage}>
         <SuccessMark />
         <h1>Delivery Confirmed</h1>
-        <p className={styles.cardLine}>{maskedCard(card.last4)}</p>
+        <p className={styles.cardLine}>{card.identifier}</p>
         <p className={styles.muted}>The delivery has been successfully confirmed.</p>
         <Button block onClick={() => navigate("/")}>
           Done
@@ -127,6 +130,7 @@ export function DeliveryDetailPage() {
               <Countdown until={otp.expiresAt} expiredLabel="0:00" onExpire={() => setTick((value) => value + 1)} />
             </p>
           )}
+          {message ? <p className="banner-success">{message}</p> : null}
           {error ? <p className="banner-error">{error}</p> : null}
           <form className={styles.otpForm} onSubmit={verifyOtp}>
             <OtpInput value={code} onChange={setCode} />

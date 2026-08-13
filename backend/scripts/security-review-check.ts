@@ -50,7 +50,7 @@ async function main() {
     headers: h,
     body: JSON.stringify({ qrToken: "NOT-A-REAL-QR" }),
   });
-  record("Invalid QR rejected", invalid.status === 404 && invalid.data.error === "Card not found.", `${invalid.status} ${invalid.data.error}`);
+  record("Invalid QR rejected", invalid.status === 404, `${invalid.status} ${invalid.data.error}`);
 
   const delivered = await req("/api/scan/lookup", {
     method: "POST",

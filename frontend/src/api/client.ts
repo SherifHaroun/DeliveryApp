@@ -84,7 +84,7 @@ function friendlyError(path: string, status: number, message: string) {
     return message;
   }
   if (
-    /card not found|already been delivered|another courier|wait before|too many|enter the 6-digit|send an otp|already in custody|not found|incorrect|expired/i.test(
+    /card not found|invalid or the card|already been delivered|another courier|wait before|too many|enter the 6-digit|send an otp|already in custody|not found|incorrect|expired/i.test(
       message,
     )
   ) {

@@ -62,7 +62,7 @@ export function DashboardPage() {
             {recent.slice(0, 6).map((item) => (
               <li key={item.id} className={styles.row}>
                 <div>
-                  <strong>{maskedCard(item.last4)}</strong>
+                  <strong>{item.identifier ?? maskedCard(item.last4)}</strong>
                   <span>
                     {dayHeading(item.createdAt)}, {formatTime(item.createdAt)}
                   </span>

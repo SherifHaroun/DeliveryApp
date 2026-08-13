@@ -1,53 +1,53 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
+import { isResendConfigured, RESEND_API_KEY, RESEND_FROM } from "../../config/resend.js";
 import type { NotificationResult, OtpMessage } from "./types.js";
 
-const host = process.env.SMTP_HOST;
-const port = Number(process.env.SMTP_PORT ?? 587);
-const user = process.env.SMTP_USER;
-const pass = process.env.SMTP_PASS;
-const from = process.env.SMTP_FROM ?? "Card Delivery <noreply@delivery.local>";
-
-function smtpConfigured() {
-  return Boolean(host && user && pass);
+function emailBody(code: string, expiresInMinutes: number) {
+  return [
+    "Your verification code for your card delivery is:",
+    "",
+    code,
+    "",
+    `This code expires in ${expiresInMinutes} minutes.`,
+    "",
+    "If you did not request this code, please ignore this email.",
+    "",
+    "Card Delivery Team",
+  ].join("\n");
 }
 
-function transporter() {
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass },
-  });
+function emailHtml(code: string, expiresInMinutes: number) {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 520px; color: #172033;">
+      <p>Your verification code for your card delivery is:</p>
+      <p style="font-size: 32px; letter-spacing: 8px; font-weight: 700; color: #2563EB; margin: 24px 0;">
+        ${code}
+      </p>
+      <p>This code expires in ${expiresInMinutes} minutes.</p>
+      <p>If you did not request this code, please ignore this email.</p>
+      <p>Card Delivery Team</p>
+    </div>
+  `;
 }
 
 export async function sendOtpEmail(message: OtpMessage): Promise<NotificationResult> {
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 520px; color: #0f172a;">
-      <h2 style="color: #0b1f3a; margin-bottom: 8px;">Card delivery confirmation</h2>
-      <p>Hello ${message.customerName},</p>
-      <p>Your courier is delivering your bank card ending in <strong>${message.last4}</strong> (${message.cardIdentifier}).</p>
-      <p>Please give this one-time code to the courier to confirm you received the card:</p>
-      <p style="font-size: 32px; letter-spacing: 8px; font-weight: 700; color: #1d4ed8; margin: 24px 0;">
-        ${message.code}
-      </p>
-      <p style="color: #64748b; font-size: 14px;">This code expires in ${message.expiresInMinutes} minutes. Do not share it with anyone except the courier at your door.</p>
-    </div>
-  `;
-
-  if (!smtpConfigured()) {
-    console.log(
-      `[OTP][EMAIL] SMTP not configured — customer inbox skipped. to=${message.to} card=${message.cardIdentifier} code=${message.code}`,
-    );
-    return { channel: "EMAIL", sent: true };
+  if (!isResendConfigured()) {
+    throw new Error("Resend is not configured.");
   }
 
-  await transporter().sendMail({
-    from,
+  const resend = new Resend(RESEND_API_KEY);
+  const { error } = await resend.emails.send({
+    from: RESEND_FROM,
     to: message.to,
-    subject: `Your card delivery code (${message.cardIdentifier})`,
-    html,
-    text: `Your card delivery code for ${message.cardIdentifier} is ${message.code}. It expires in ${message.expiresInMinutes} minutes.`,
+    subject: "Your Card Delivery Verification Code",
+    text: emailBody(message.code, message.expiresInMinutes),
+    html: emailHtml(message.code, message.expiresInMinutes),
   });
+
+  if (error) {
+    console.error("Failed to send OTP email.");
+    throw new Error("Could not send OTP email.");
+  }
 
   return { channel: "EMAIL", sent: true };
 }

@@ -45,7 +45,7 @@ export function statusLabel(status: string) {
     case "PENDING":
       return "Pending";
     case "IN_CUSTODY":
-      return "Ready for Delivery";
+      return "In Your Custody";
     case "OTP_SENT":
       return "OTP Sent";
     case "DELIVERED":

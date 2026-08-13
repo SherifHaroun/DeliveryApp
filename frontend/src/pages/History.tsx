@@ -6,7 +6,7 @@ import type { DeliveryCard as DeliveryCardType } from "../api/types";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Skeleton } from "../components/ui/Skeleton";
 import { StatusBadge } from "../components/ui/StatusBadge";
-import { formatTime, groupByDay, maskedCard } from "../lib/format";
+import { formatTime, groupByDay } from "../lib/format";
 import styles from "./ListPage.module.css";
 
 export function HistoryPage() {
@@ -53,7 +53,7 @@ export function HistoryPage() {
                 {group.items.map((card) => (
                   <Link key={card.id} to={`/deliveries/${card.id}`} className={styles.historyRow}>
                     <div className={styles.historyTop}>
-                      <strong>{maskedCard(card.last4)}</strong>
+                      <strong>{card.identifier}</strong>
                       <StatusBadge status={card.status} />
                     </div>
                     <p className={styles.historyTime}>{formatTime(card.deliveredAt ?? card.updatedAt)}</p>

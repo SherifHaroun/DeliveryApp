@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { ImageUp, QrCode } from "lucide-react";
 import { api, ApiError } from "../api/client";
 import type { DeliveryCard } from "../api/types";
@@ -16,68 +16,58 @@ type ScanResult = {
   alreadyInCustody: boolean;
 };
 
-type Phase = "scanning" | "preview" | "success" | "existing";
+type Phase = "scanning" | "success" | "existing";
 
 export function ScanPage() {
   const navigate = useNavigate();
   const { prefs } = useScanPrefs();
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const handlingRef = useRef(false);
+  const lastValueRef = useRef<string | null>(null);
+  const ignoreUntilRef = useRef(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>("scanning");
-  const [preview, setPreview] = useState<DeliveryCard | null>(null);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [scanKey, setScanKey] = useState(0);
-  const confirmingRef = useRef(false);
 
-  async function lookupToken(qrToken: string) {
+  async function takeScannedCard(raw: string) {
+    const qrToken = raw.trim();
+    if (!qrToken) return;
     if (handlingRef.current) return;
+    if (lastValueRef.current === qrToken && Date.now() < ignoreUntilRef.current) return;
+
     handlingRef.current = true;
+    lastValueRef.current = qrToken;
     setError(null);
     setBusy(true);
+
     try {
-      const lookedUp = await api<ScanResult>("/api/scan/lookup", {
+      const taken = await api<ScanResult>("/api/scan/custody", {
         method: "POST",
         body: JSON.stringify({ qrToken }),
       });
       await scannerRef.current?.stop().catch(() => undefined);
       playScanFeedback(prefs);
-      setPreview(lookedUp.card);
-      setPhase(lookedUp.alreadyInCustody ? "existing" : "preview");
-    } catch (err) {
-      handlingRef.current = false;
-      setError(err instanceof ApiError ? err.message : "Could not read this QR code.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function confirmCustody() {
-    if (!preview || confirmingRef.current) return;
-    confirmingRef.current = true;
-    setBusy(true);
-    setError(null);
-    try {
-      const taken = await api<ScanResult>("/api/scan/custody", {
-        method: "POST",
-        body: JSON.stringify({ qrToken: preview.qrToken }),
-      });
       setResult(taken);
       setPhase(taken.alreadyInCustody ? "existing" : "success");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not take this card into custody.");
+      handlingRef.current = false;
+      ignoreUntilRef.current = Date.now() + 2500;
+      setError(
+        err instanceof ApiError ? err.message : "This QR code is invalid or the card was not found.",
+      );
     } finally {
-      confirmingRef.current = false;
       setBusy(false);
     }
   }
 
   function scanAgain() {
     handlingRef.current = false;
-    setPreview(null);
+    lastValueRef.current = null;
+    ignoreUntilRef.current = 0;
     setResult(null);
     setError(null);
     setPhase("scanning");
@@ -90,21 +80,37 @@ export function ScanPage() {
     }
 
     let cancelled = false;
-    const scanner = new Html5Qrcode("qr-reader");
+    const scanner = new Html5Qrcode("qr-reader", {
+      formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+      verbose: false,
+    });
     scannerRef.current = scanner;
 
+    const config = {
+      fps: 12,
+      qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+        const edge = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * 0.72);
+        const size = Math.max(180, Math.min(edge, 280));
+        return { width: size, height: size };
+      },
+      aspectRatio: 1,
+      disableFlip: false,
+    };
+
+    const onDecoded = (decoded: string) => {
+      void takeScannedCard(decoded);
+    };
+
     scanner
-      .start(
-        { facingMode: "environment" },
-        { fps: 8, qrbox: { width: 240, height: 240 } },
-        (decoded) => {
-          void lookupToken(decoded.trim());
-        },
-        () => undefined,
-      )
-      .catch(() => {
-        if (!cancelled) {
-          setCameraError("Camera unavailable. Use a photo of the QR code instead.");
+      .start({ facingMode: "environment" }, config, onDecoded, () => undefined)
+      .catch(async () => {
+        if (cancelled) return;
+        try {
+          await scanner.start({ facingMode: "user" }, config, onDecoded, () => undefined);
+        } catch {
+          if (!cancelled) {
+            setCameraError("Camera unavailable. Use a photo of the QR code instead.");
+          }
         }
       });
 
@@ -121,15 +127,17 @@ export function ScanPage() {
     if (!file) return;
     setError(null);
     setBusy(true);
+    lastValueRef.current = null;
+    handlingRef.current = false;
     try {
       await scannerRef.current?.stop().catch(() => undefined);
       const fileScanner = new Html5Qrcode("qr-file-reader");
       const decoded = await fileScanner.scanFile(file, true);
       fileScanner.clear();
-      handlingRef.current = false;
-      await lookupToken(decoded.trim());
+      await takeScannedCard(decoded);
     } catch {
       handlingRef.current = false;
+      lastValueRef.current = null;
       setError("Could not read a QR code from that image.");
       setPhase("scanning");
       setScanKey((key) => key + 1);
@@ -139,8 +147,7 @@ export function ScanPage() {
     }
   }
 
-  const shownCard = result?.card ?? preview;
-  const nextDeliveryId = shownCard?.id;
+  const card = result?.card;
 
   return (
     <div>
@@ -166,6 +173,7 @@ export function ScanPage() {
             className={styles.fileInput}
             type="file"
             accept="image/*"
+            capture="environment"
             onChange={(event) => void onPickImage(event.target.files?.[0])}
           />
           <Button variant="ghost" block type="button" onClick={() => fileRef.current?.click()}>
@@ -177,42 +185,25 @@ export function ScanPage() {
 
       <div id="qr-file-reader" className={styles.hiddenReader} />
 
-      {phase === "preview" && preview ? (
+      {phase === "success" && card ? (
         <section className={styles.panel}>
           <SuccessMark />
-          <h2>Card Found</h2>
-          <CardFacts card={preview} />
-          {error ? <p className="banner-error">{error}</p> : null}
-          <Button block loading={busy} onClick={() => void confirmCustody()}>
-            {busy ? "Saving..." : "Confirm card"}
-          </Button>
-          <Button variant="ghost" block type="button" onClick={scanAgain}>
-            Scan a different card
-          </Button>
-        </section>
-      ) : null}
-
-      {phase === "success" && result ? (
-        <section className={styles.panel}>
-          <SuccessMark />
-          <h2>Card Found</h2>
-          <CardFacts card={result.card} />
-          <Button block onClick={() => navigate(`/deliveries/${result.card.id}`)}>
+          <h2>Card Found ✓</h2>
+          <CardFacts card={card} />
+          <Button block onClick={() => navigate(`/deliveries/${card.id}`)}>
             Send OTP
           </Button>
         </section>
       ) : null}
 
-      {phase === "existing" && shownCard ? (
+      {phase === "existing" && card ? (
         <section className={styles.panel}>
-          <h2>Card already in custody</h2>
-          <p className={styles.lead}>Continue with this delivery.</p>
-          <CardFacts card={shownCard} />
-          {nextDeliveryId ? (
-            <Button block onClick={() => navigate(`/deliveries/${nextDeliveryId}`)}>
-              {shownCard.status === "OTP_SENT" ? "Enter OTP" : "Send OTP"}
-            </Button>
-          ) : null}
+          <SuccessMark />
+          <h2>Card Found ✓</h2>
+          <CardFacts card={card} />
+          <Button block onClick={() => navigate(`/deliveries/${card.id}`)}>
+            {card.status === "OTP_SENT" ? "Enter OTP" : "Send OTP"}
+          </Button>
           <Button variant="ghost" block type="button" onClick={scanAgain}>
             Scan another card
           </Button>

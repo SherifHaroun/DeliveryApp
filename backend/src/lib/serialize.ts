@@ -96,24 +96,63 @@ export function serializeCard(
 }
 
 export function normalizeQrValue(raw: string) {
-  const value = String(raw ?? "").trim().toUpperCase();
-  const match = value.match(/CIBDEL-[A-Z0-9]+/);
-  return match ? match[0] : value;
+  const value = String(raw ?? "").trim();
+  if (!value) return "";
+
+  try {
+    const url = new URL(value);
+    const param =
+      url.searchParams.get("qr") ??
+      url.searchParams.get("token") ??
+      url.searchParams.get("code") ??
+      url.searchParams.get("id");
+    if (param?.trim()) {
+      return param.trim().toUpperCase();
+    }
+    const parts = url.pathname.split("/").filter(Boolean);
+    if (parts.length) {
+      return decodeURIComponent(parts[parts.length - 1]).trim().toUpperCase();
+    }
+  } catch {
+    // Plain QR payload, not a URL.
+  }
+
+  const upper = value.toUpperCase();
+  const cibdel = upper.match(/CIBDEL-[A-Z0-9]+/);
+  if (cibdel) return cibdel[0];
+  return upper;
+}
+
+function qrLookupTokens(raw: string) {
+  const tokens = new Set<string>();
+  const trimmed = String(raw ?? "").trim();
+  const normalized = normalizeQrValue(raw);
+  if (trimmed) {
+    tokens.add(trimmed);
+    tokens.add(trimmed.toUpperCase());
+  }
+  if (normalized) tokens.add(normalized);
+  return [...tokens];
 }
 
 export async function findCardByQr(qrToken: string) {
-  const token = normalizeQrValue(qrToken);
-  if (!token) {
+  const tokens = qrLookupTokens(qrToken);
+  if (!tokens.length) {
     throw new HttpError(400, "QR code is required");
   }
 
-  const card = await prisma.card.findUnique({
-    where: { qrToken: token },
+  const card = await prisma.card.findFirst({
+    where: {
+      OR: tokens.flatMap((token) => [
+        { qrToken: { equals: token, mode: "insensitive" } },
+        { identifier: { equals: token, mode: "insensitive" } },
+      ]),
+    },
     include: cardInclude,
   });
 
   if (!card) {
-    throw new HttpError(404, "Card not found.");
+    throw new HttpError(404, "This QR code is invalid or the card was not found.");
   }
 
   return card;

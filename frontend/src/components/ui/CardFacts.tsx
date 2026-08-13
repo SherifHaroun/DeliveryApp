@@ -6,8 +6,8 @@ export function CardFacts({ card }: { card: DeliveryCard }) {
   return (
     <dl className={styles.facts}>
       <div>
-        <dt>Card number</dt>
-        <dd>{`•••• •••• •••• ${card.last4}`}</dd>
+        <dt>Card</dt>
+        <dd>{card.identifier}</dd>
       </div>
       <div>
         <dt>Status</dt>

@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { createApp } from "./app.js";
+import { ensureDemoLabelCards } from "./lib/demoCards.js";
 import { ensureDemoCourier } from "./lib/demoUser.js";
 import { prisma } from "./lib/prisma.js";
 
@@ -8,6 +9,7 @@ const app = createApp();
 
 async function main() {
   await ensureDemoCourier();
+  await ensureDemoLabelCards();
 
   const server = app.listen(port, "0.0.0.0", () => {
     console.log(`Delivery API listening on port ${port}`);

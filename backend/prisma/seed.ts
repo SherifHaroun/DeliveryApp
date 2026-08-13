@@ -121,10 +121,16 @@ async function main() {
   const hoursAgo = (h: number) => new Date(now.getTime() - h * 60 * 60 * 1000);
 
   const cardDefs = [
-    { identifier: "CARD-1001", last4: "4412", type: "Debit", status: "PENDING", token: "CIBDEL-A7K2M9", customer: 0 },
-    { identifier: "CARD-1002", last4: "8831", type: "Credit", status: "PENDING", token: "CIBDEL-B3N8Q1", customer: 1 },
-    { identifier: "CARD-1003", last4: "2290", type: "Debit", status: "PENDING", token: "CIBDEL-C9P4T6", customer: 2 },
-    { identifier: "CARD-1004", last4: "7745", type: "Prepaid", status: "PENDING", token: "CIBDEL-D1R5W2", customer: 3 },
+    { identifier: "C00001", last4: "0001", type: "Debit", status: "PENDING", token: "C00001", customer: 0 },
+    { identifier: "C00002", last4: "0002", type: "Debit", status: "PENDING", token: "C00002", customer: 1 },
+    { identifier: "C00003", last4: "0003", type: "Debit", status: "PENDING", token: "C00003", customer: 2 },
+    { identifier: "C00004", last4: "0004", type: "Debit", status: "PENDING", token: "C00004", customer: 3 },
+    { identifier: "C00005", last4: "0005", type: "Debit", status: "PENDING", token: "C00005", customer: 4 },
+    { identifier: "C00006", last4: "0006", type: "Debit", status: "PENDING", token: "C00006", customer: 5 },
+    { identifier: "C00007", last4: "0007", type: "Debit", status: "PENDING", token: "C00007", customer: 6 },
+    { identifier: "C00008", last4: "0008", type: "Debit", status: "PENDING", token: "C00008", customer: 7 },
+    { identifier: "C00009", last4: "0009", type: "Debit", status: "PENDING", token: "C00009", customer: 8 },
+    { identifier: "C00010", last4: "0010", type: "Debit", status: "PENDING", token: "C00010", customer: 9 },
     { identifier: "CARD-1005", last4: "1108", type: "Debit", status: "IN_CUSTODY", token: "CIBDEL-E6S7Y3", customer: 4, scannedHours: 2 },
     { identifier: "CARD-1006", last4: "5566", type: "Credit", status: "IN_CUSTODY", token: "CIBDEL-F2U8Z4", customer: 5, scannedHours: 5 },
     { identifier: "CARD-1007", last4: "9023", type: "Debit", status: "OTP_SENT", token: "CIBDEL-G4V1X8", customer: 6, scannedHours: 6, otpHours: 1 },

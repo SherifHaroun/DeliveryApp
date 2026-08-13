@@ -134,7 +134,7 @@ export async function sendOtp(cardId: string, courierId: string) {
       last4: card.last4,
       expiresInMinutes: OTP_EXPIRY_MINUTES,
     });
-  } catch (error) {
+  } catch {
     await prisma.otp.update({
       where: { id: created.otp.id },
       data: { invalidatedAt: new Date() },
@@ -145,8 +145,8 @@ export async function sendOtp(cardId: string, courierId: string) {
         data: { status: CARD_STATUSES.IN_CUSTODY },
       });
     }
-    console.error(error);
-    throw new HttpError(502, "Could not send the OTP email. Try again.");
+    console.error("Failed to send OTP email.");
+    throw new HttpError(502, "Something went wrong while sending the OTP.");
   }
 
   return serializeCard(created.card, created.otp);
