@@ -26,7 +26,7 @@ export function createApp() {
   app.use(morgan("dev"));
 
   app.get("/api/health", (_req, res) => {
-    res.json({ ok: true, service: "delivery-app" });
+    res.json({ ok: true, service: "delivery-app", release: "2026-08-13" });
   });
   app.get("/", (_req, res) => {
     res.json({ service: "delivery-app", health: "/api/health" });
