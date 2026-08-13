@@ -1,0 +1,34 @@
+.toggle {
+  width: 48px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: #d0d5dd;
+  position: relative;
+  transition: background 0.16s ease;
+  flex-shrink: 0;
+}
+
+.on {
+  background: var(--primary);
+}
+
+.knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(15, 39, 71, 0.2);
+  transition: transform 0.16s ease;
+}
+
+.on .knob {
+  transform: translateX(20px);
+}
+
+html[data-theme="dark"] .toggle:not(.on) {
+  background: #334155;
+}

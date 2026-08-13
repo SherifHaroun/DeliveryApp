@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
-import { CheckCircle2, ImageUp } from "lucide-react";
+import { ImageUp, QrCode } from "lucide-react";
 import { api, ApiError } from "../api/client";
 import type { DeliveryCard } from "../api/types";
 import { Button } from "../components/ui/Button";
 import { CardFacts } from "../components/ui/CardFacts";
-import { WorkflowSteps } from "../components/ui/WorkflowSteps";
+import { PageHeader } from "../components/ui/PageHeader";
+import { SuccessMark } from "../components/ui/SuccessMark";
+import { playScanFeedback, useScanPrefs } from "../theme/ScanPrefsContext";
 import styles from "./Scan.module.css";
 
 type ScanResult = {
@@ -18,6 +20,7 @@ type Phase = "scanning" | "preview" | "success" | "existing";
 
 export function ScanPage() {
   const navigate = useNavigate();
+  const { prefs } = useScanPrefs();
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const handlingRef = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -41,6 +44,7 @@ export function ScanPage() {
         body: JSON.stringify({ qrToken }),
       });
       await scannerRef.current?.stop().catch(() => undefined);
+      playScanFeedback(prefs);
       setPreview(lookedUp.card);
       setPhase(lookedUp.alreadyInCustody ? "existing" : "preview");
     } catch (err) {
@@ -140,20 +144,21 @@ export function ScanPage() {
 
   return (
     <div>
-      <header className={styles.header}>
-        <h1>Scan QR Code</h1>
-        <p>Point the camera at the QR on the card envelope. Do not type the code.</p>
-      </header>
+      <PageHeader title="Scan QR" backTo="/" />
 
-      <WorkflowSteps current={phase === "success" || phase === "existing" ? 2 : phase === "preview" ? 1 : 0} />
-
+      <div className={phase === "scanning" ? styles.readerWrap : styles.hiddenReader}>
+        <div id="qr-reader" className={styles.reader} />
+        {phase === "scanning" ? (
+          <div className={styles.frame} aria-hidden="true">
+            <QrCode size={28} />
+          </div>
+        ) : null}
+      </div>
       {phase === "scanning" ? (
         <>
-          <div className={styles.readerWrap}>
-            <div id="qr-reader" className={styles.reader} />
-          </div>
+          <p className={styles.instruction}>Place the QR code inside the frame</p>
           {cameraError ? <p className={styles.hint}>{cameraError}</p> : null}
-          {error ? <p className={styles.error}>{error}</p> : null}
+          {error ? <p className="banner-error">{error}</p> : null}
           {busy ? <p className={styles.hint}>Looking up this card…</p> : null}
 
           <input
@@ -174,12 +179,12 @@ export function ScanPage() {
 
       {phase === "preview" && preview ? (
         <section className={styles.panel}>
-          <h2>Card found</h2>
-          <p className={styles.lead}>Confirm that you are taking this card into your custody.</p>
-          <CardFacts card={preview} timestamp={preview.createdAt} />
-          {error ? <p className={styles.error}>{error}</p> : null}
-          <Button block disabled={busy} onClick={() => void confirmCustody()}>
-            {busy ? "Saving…" : "Take into custody"}
+          <SuccessMark />
+          <h2>Card Found</h2>
+          <CardFacts card={preview} />
+          {error ? <p className="banner-error">{error}</p> : null}
+          <Button block loading={busy} onClick={() => void confirmCustody()}>
+            {busy ? "Saving..." : "Confirm card"}
           </Button>
           <Button variant="ghost" block type="button" onClick={scanAgain}>
             Scan a different card
@@ -189,33 +194,23 @@ export function ScanPage() {
 
       {phase === "success" && result ? (
         <section className={styles.panel}>
-          <div className={styles.successIcon}>
-            <CheckCircle2 size={36} />
-          </div>
-          <h2>Card Successfully Added to Your Custody</h2>
-          <CardFacts card={result.card} timestamp={result.card.scannedAt} />
-          <Button
-            variant="warning"
-            block
-            onClick={() => navigate(`/deliveries/${result.card.id}`)}
-          >
-            Send OTP to Customer
+          <SuccessMark />
+          <h2>Card Found</h2>
+          <CardFacts card={result.card} />
+          <Button block onClick={() => navigate(`/deliveries/${result.card.id}`)}>
+            Send OTP
           </Button>
         </section>
       ) : null}
 
       {phase === "existing" && shownCard ? (
         <section className={styles.panel}>
-          <h2>This card is already in your custody</h2>
-          <p className={styles.lead}>No duplicate delivery was created.</p>
-          <CardFacts card={shownCard} timestamp={shownCard.scannedAt} />
+          <h2>Card already in custody</h2>
+          <p className={styles.lead}>Continue with this delivery.</p>
+          <CardFacts card={shownCard} />
           {nextDeliveryId ? (
-            <Button
-              variant="warning"
-              block
-              onClick={() => navigate(`/deliveries/${nextDeliveryId}`)}
-            >
-              {shownCard.status === "OTP_SENT" ? "Enter OTP" : "Send OTP to Customer"}
+            <Button block onClick={() => navigate(`/deliveries/${nextDeliveryId}`)}>
+              {shownCard.status === "OTP_SENT" ? "Enter OTP" : "Send OTP"}
             </Button>
           ) : null}
           <Button variant="ghost" block type="button" onClick={scanAgain}>

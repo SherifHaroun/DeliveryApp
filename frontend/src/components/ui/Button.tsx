@@ -2,12 +2,21 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import styles from "./Button.module.css";
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "success" | "warning" | "ghost" | "danger";
+  variant?: "primary" | "success" | "ghost" | "danger";
   block?: boolean;
+  loading?: boolean;
   children: ReactNode;
 };
 
-export function Button({ variant = "primary", block, className, children, ...props }: Props) {
+export function Button({
+  variant = "primary",
+  block,
+  loading,
+  className,
+  children,
+  disabled,
+  ...props
+}: Props) {
   const classes = [
     styles.button,
     styles[variant],
@@ -16,7 +25,8 @@ export function Button({ variant = "primary", block, className, children, ...pro
   ].join(" ");
 
   return (
-    <button className={classes} {...props}>
+    <button className={classes} disabled={disabled || loading} {...props}>
+      {loading ? <span className={styles.spinner} aria-hidden="true" /> : null}
       {children}
     </button>
   );

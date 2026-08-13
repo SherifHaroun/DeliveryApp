@@ -1,6 +1,6 @@
 .wrap {
   text-align: center;
-  padding: 40px 16px;
+  padding: 28px 12px;
   color: var(--muted);
 }
 
@@ -8,16 +8,17 @@
   width: 48px;
   height: 48px;
   margin: 0 auto 12px;
-  border-radius: 14px;
+  border-radius: 16px;
+  background: var(--primary-soft);
+  color: var(--primary);
   display: grid;
   place-items: center;
-  background: #eef2f7;
-  color: var(--navy);
 }
 
 .wrap h3 {
   color: var(--text);
   font-size: 16px;
+  font-weight: 650;
 }
 
 .wrap p {

@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { CheckCircle2, Package, QrCode, WalletCards } from "lucide-react";
+import { Package } from "lucide-react";
 import { api } from "../api/client";
 import type { DashboardData } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
-import { ActivityItem } from "../components/ui/ActivityItem";
 import { EmptyState } from "../components/ui/EmptyState";
-import { StatCard } from "../components/ui/StatCard";
-import { WorkflowSteps } from "../components/ui/WorkflowSteps";
+import { Skeleton } from "../components/ui/Skeleton";
+import { StatusBadge } from "../components/ui/StatusBadge";
+import { dayHeading, firstName, formatTime, greeting, maskedCard } from "../lib/format";
 import styles from "./Dashboard.module.css";
 
 export function DashboardPage() {
@@ -21,68 +20,55 @@ export function DashboardPage() {
       .catch((err: Error) => setError(err.message));
   }, []);
 
+  const recent = data?.recentActivity ?? [];
+
   return (
     <div>
       <header className={styles.header}>
-        <div>
-          <p className={styles.kicker}>Welcome back</p>
-          <h1>{user?.fullName}</h1>
-        </div>
+        <p className={styles.brand}>Card Delivery</p>
+        <h1>
+          {greeting()}, {firstName(user?.fullName ?? "Courier")}
+        </h1>
+        <p className={styles.support}>Ready for your next delivery?</p>
       </header>
 
-      <WorkflowSteps current={0} />
-
-      <Link to="/scan" className={styles.scan}>
-        <QrCode size={28} />
+      <section className={styles.hero}>
         <div>
-          <strong>Scan QR Code</strong>
-          <span>Take a card into your custody</span>
+          <h2>Ready to Deliver</h2>
+          <p>Scan a card to begin the delivery process.</p>
         </div>
-      </Link>
-
-      {error ? <p className={styles.error}>{error}</p> : null}
-
-      <section className={styles.stats}>
-        <StatCard
-          label="Cards To Be Delivered"
-          value={data?.toBeDelivered ?? 0}
-          icon={<Package size={18} />}
-          tone="blue"
-        />
-        <StatCard
-          label="Delivered Cards"
-          value={data?.delivered ?? 0}
-          icon={<CheckCircle2 size={18} />}
-          tone="green"
-        />
-        <StatCard
-          label="My Cards In Custody"
-          value={data?.inCustody ?? 0}
-          icon={<WalletCards size={18} />}
-          tone="navy"
-        />
+        <span className={styles.heroIcon}>
+          <Package size={28} />
+        </span>
       </section>
 
-      <section className={styles.activity}>
-        <div className={styles.activityHead}>
-          <h2>Recent Activity</h2>
-        </div>
-        {!data?.recentActivity.length ? (
+      {error ? <p className="banner-error">{error}</p> : null}
+
+      <section className={styles.recent}>
+        <h2>Recent Deliveries</h2>
+        {!data ? (
+          <div className={styles.stack}>
+            <Skeleton height={64} />
+            <Skeleton height={64} />
+          </div>
+        ) : !recent.length ? (
           <EmptyState
-            icon={<QrCode size={22} />}
-            title="No activity yet"
-            text="Scan a card to start a delivery."
+            icon={<Package size={22} />}
+            title="No deliveries yet"
+            text="Scan a card to start your first delivery."
           />
         ) : (
-          <ul>
-            {data.recentActivity.map((item) => (
-              <ActivityItem
-                key={item.id}
-                action={item.action}
-                title={item.summary}
-                detail={`${item.identifier ?? ""} · ${item.customerName}`.trim()}
-                createdAt={item.createdAt}
-              />
+          <ul className={styles.list}>
+            {recent.slice(0, 6).map((item) => (
+              <li key={item.id} className={styles.row}>
+                <div>
+                  <strong>{maskedCard(item.last4)}</strong>
+                  <span>
+                    {dayHeading(item.createdAt)}, {formatTime(item.createdAt)}
+                  </span>
+                </div>
+                <StatusBadge status={item.status} />
+              </li>
             ))}
           </ul>
         )}

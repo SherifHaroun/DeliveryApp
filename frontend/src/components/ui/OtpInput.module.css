@@ -1,0 +1,21 @@
+.row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.box {
+  height: 54px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.box:focus {
+  outline: 2px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  border-color: var(--primary);
+}

@@ -3,22 +3,33 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  min-height: 52px;
   border: 0;
-  border-radius: 12px;
-  padding: 12px 18px;
-  font-size: 15px;
+  border-radius: 16px;
+  padding: 14px 20px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.2;
-  transition: transform 0.12s ease, background 0.12s ease, opacity 0.12s ease;
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease,
+    opacity 0.16s ease;
 }
 
 .button:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.button:not(:disabled):hover {
+  transform: translateY(-1px);
 }
 
 .button:not(:disabled):active {
-  transform: translateY(1px);
+  transform: scale(0.98);
 }
 
 .block {
@@ -28,30 +39,40 @@
 .primary {
   background: var(--primary);
   color: #fff;
-  box-shadow: 0 6px 14px rgba(29, 78, 216, 0.22);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.22);
 }
 
 .primary:not(:disabled):hover {
   background: var(--primary-hover);
 }
 
+.primary:not(:disabled):active {
+  background: var(--primary-pressed);
+}
+
 .success {
   background: var(--success);
   color: #fff;
-}
-
-.warning {
-  background: var(--warning);
-  color: #fff;
+  box-shadow: 0 10px 20px rgba(18, 183, 106, 0.2);
 }
 
 .ghost {
-  background: #fff;
+  background: var(--card);
   color: var(--text);
   border: 1px solid var(--border);
+  box-shadow: none;
 }
 
 .danger {
   background: var(--danger-soft);
   color: var(--danger);
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
 }

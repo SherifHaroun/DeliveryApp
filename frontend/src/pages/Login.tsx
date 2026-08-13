@@ -28,7 +28,7 @@ export function LoginPage() {
       const from = (location.state as { from?: string } | null)?.from;
       navigate(from && from !== "/login" ? from : "/");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Unable to sign in");
+      setError(err instanceof ApiError ? err.message : "Unable to sign in. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -39,14 +39,14 @@ export function LoginPage() {
       <div className={styles.panel}>
         <div className={styles.brand}>
           <span className={styles.logo}>
-            <CreditCard size={28} />
+            <CreditCard size={26} />
           </span>
           <h1>Card Delivery</h1>
-          <p>Sign in to scan, deliver, and confirm bank cards.</p>
+          <p>Courier workspace</p>
         </div>
 
         <form className={styles.card} onSubmit={onSubmit}>
-          <label>
+          <label className="field">
             Email
             <input
               type="email"
@@ -56,7 +56,7 @@ export function LoginPage() {
               required
             />
           </label>
-          <label>
+          <label className="field">
             Password
             <input
               type="password"
@@ -66,9 +66,9 @@ export function LoginPage() {
               required
             />
           </label>
-          {error ? <p className={styles.error}>{error}</p> : null}
-          <Button type="submit" block disabled={submitting}>
-            {submitting ? "Signing in…" : "Sign in"}
+          {error ? <p className="banner-error">{error}</p> : null}
+          <Button type="submit" block loading={submitting}>
+            {submitting ? "Signing in..." : "Sign in"}
           </Button>
         </form>
       </div>

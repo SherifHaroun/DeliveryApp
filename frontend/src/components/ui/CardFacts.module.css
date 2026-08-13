@@ -1,31 +1,22 @@
 .facts {
   display: grid;
-  gap: 12px;
-  margin: 0;
+  gap: 14px;
 }
 
 .facts div {
   display: grid;
   gap: 4px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
-}
-
-.facts div:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
 }
 
 .facts dt {
-  color: var(--muted);
   font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .facts dd {
   margin: 0;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--text);
 }

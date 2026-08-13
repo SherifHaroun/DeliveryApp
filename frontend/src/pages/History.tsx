@@ -1,75 +1,66 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { History } from "lucide-react";
 import { api } from "../api/client";
-import type { HistoryEvent } from "../api/types";
+import type { DeliveryCard as DeliveryCardType } from "../api/types";
 import { EmptyState } from "../components/ui/EmptyState";
+import { Skeleton } from "../components/ui/Skeleton";
 import { StatusBadge } from "../components/ui/StatusBadge";
-import { formatDate, formatTime } from "../lib/format";
+import { formatTime, groupByDay, maskedCard } from "../lib/format";
 import styles from "./ListPage.module.css";
 
 export function HistoryPage() {
-  const [query, setQuery] = useState("");
-  const [rows, setRows] = useState<HistoryEvent[]>([]);
+  const [cards, setCards] = useState<DeliveryCardType[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (query.trim()) params.set("q", query.trim());
-    api<HistoryEvent[]>(`/api/history?${params.toString()}`)
-      .then(setRows)
+    api<DeliveryCardType[]>("/api/deliveries?status=DELIVERED&sort=updated&dir=desc")
+      .then(setCards)
       .catch((err: Error) => setError(err.message));
-  }, [query]);
+  }, []);
+
+  const groups = useMemo(
+    () =>
+      groupByDay(cards ?? [], (card) => card.deliveredAt ?? card.updatedAt),
+    [cards],
+  );
 
   return (
     <div>
       <header className={styles.header}>
         <h1>History</h1>
-        <p>Read-only audit log of your delivery activity.</p>
       </header>
 
-      <input
-        className={styles.search}
-        placeholder="Search by card, customer, or action"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      {error ? <p className="banner-error">{error}</p> : null}
 
-      {error ? <p className={styles.error}>{error}</p> : null}
-
-      {!rows.length ? (
+      {cards === null && !error ? (
+        <div className={styles.list}>
+          <Skeleton />
+          <Skeleton />
+        </div>
+      ) : !cards?.length ? (
         <EmptyState
           icon={<History size={22} />}
-          title="No history yet"
-          text="Scan, custody, OTP, and delivery events will appear here."
+          title="No deliveries yet"
+          text="Completed deliveries will appear here."
         />
       ) : (
         <div className={styles.history}>
-          {rows.map((row) => (
-            <article key={row.id} className={styles.historyRow}>
-              <div className={styles.historyTop}>
-                <strong>{row.cardIdentifier}</strong>
-                <StatusBadge status={row.status} />
+          {groups.map((group) => (
+            <section key={group.heading}>
+              <h2 className={styles.day}>{group.heading}</h2>
+              <div className={styles.list}>
+                {group.items.map((card) => (
+                  <Link key={card.id} to={`/deliveries/${card.id}`} className={styles.historyRow}>
+                    <div className={styles.historyTop}>
+                      <strong>{maskedCard(card.last4)}</strong>
+                      <StatusBadge status={card.status} />
+                    </div>
+                    <p className={styles.historyTime}>{formatTime(card.deliveredAt ?? card.updatedAt)}</p>
+                  </Link>
+                ))}
               </div>
-              <p className={styles.historyAction}>{row.actionLabel}</p>
-              <dl className={styles.historyMeta}>
-                <div>
-                  <dt>Customer</dt>
-                  <dd>{row.customerName}</dd>
-                </div>
-                <div>
-                  <dt>Courier</dt>
-                  <dd>{row.courierName}</dd>
-                </div>
-                <div>
-                  <dt>Date</dt>
-                  <dd>{formatDate(row.createdAt)}</dd>
-                </div>
-                <div>
-                  <dt>Time</dt>
-                  <dd>{formatTime(row.createdAt)}</dd>
-                </div>
-              </dl>
-            </article>
+            </section>
           ))}
         </div>
       )}
