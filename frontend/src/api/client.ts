@@ -1,6 +1,21 @@
 const TOKEN_KEY = "delivery_token";
 
-const API_BASE = String(import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
+export function buildApiUrl(rawBase: string | undefined, path: string): string {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  let base = String(rawBase ?? "").trim().replace(/\/+$/, "");
+
+  if (!base) {
+    return normalizedPath;
+  }
+
+  if (!/^https?:\/\//i.test(base)) {
+    base = `https://${base}`;
+  }
+
+  return new URL(normalizedPath, `${base}/`).toString();
+}
+
+const API_BASE = String(import.meta.env.VITE_API_URL ?? "").trim();
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -30,6 +45,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     throw new ApiError(0, "API URL is not configured. Set VITE_API_URL to the Railway backend URL.");
   }
 
+  const url = buildApiUrl(API_BASE, path);
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
   const token = getToken();
@@ -37,7 +53,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
 
   let response: Response;
   try {
-    response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    response = await fetch(url, { ...options, headers });
   } catch {
     throw new ApiError(0, "Unable to reach the Delivery API.");
   }
