@@ -232,7 +232,7 @@ async function main() {
 
   const pending = cardDefs.filter((c) => c.status === "PENDING");
   console.log("Seed complete.");
-  console.log("Courier login: courier / 123456");
+  console.log("Courier login: courier@gmail.com / 12345678");
   console.log("Pending QR tokens (scan these):");
   for (const card of pending) {
     console.log(`  ${card.token}  (${card.identifier})`);

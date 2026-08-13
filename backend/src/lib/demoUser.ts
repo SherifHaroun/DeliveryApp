@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt";
 import { prisma } from "./prisma.js";
 
-export const DEMO_COURIER_EMAIL = "courier";
-export const DEMO_COURIER_PASSWORD = "123456";
+export const DEMO_COURIER_EMAIL = "courier@gmail.com";
+export const DEMO_COURIER_PASSWORD = "12345678";
 
 export async function ensureDemoCourier() {
   const email = DEMO_COURIER_EMAIL;
