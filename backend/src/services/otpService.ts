@@ -86,6 +86,10 @@ export async function sendOtp(cardId: string, courierId: string) {
     }
   }
 
+  const previousStatus = card.status;
+  const previousOtpSentAt = card.otpSentAt;
+  const previousOtpId = latest && !latest.verifiedAt ? latest.id : null;
+
   const code = generateOtpCode();
   const expiresAt = otpExpiryDate();
   const sentAt = new Date();
@@ -112,15 +116,6 @@ export async function sendOtp(cardId: string, courierId: string) {
       include: cardInclude,
     });
 
-    await tx.activity.create({
-      data: {
-        cardId: card.id,
-        courierId,
-        action: ACTIVITY.OTP_SENT,
-        message: `OTP sent by email to ${maskEmail(card.customer.email)}`,
-      },
-    });
-
     return { otp, card: updated };
   });
 
@@ -135,19 +130,39 @@ export async function sendOtp(cardId: string, courierId: string) {
       expiresInMinutes: OTP_EXPIRY_MINUTES,
     });
   } catch {
-    await prisma.otp.update({
-      where: { id: created.otp.id },
-      data: { invalidatedAt: new Date() },
-    });
-    if (card.status === CARD_STATUSES.IN_CUSTODY) {
-      await prisma.card.update({
-        where: { id: card.id },
-        data: { status: CARD_STATUSES.IN_CUSTODY },
+    await prisma.$transaction(async (tx) => {
+      await tx.otp.update({
+        where: { id: created.otp.id },
+        data: { invalidatedAt: new Date() },
       });
-    }
+
+      if (previousOtpId) {
+        await tx.otp.update({
+          where: { id: previousOtpId },
+          data: { invalidatedAt: null },
+        });
+      }
+
+      await tx.card.update({
+        where: { id: card.id },
+        data: {
+          status: previousStatus,
+          otpSentAt: previousOtpSentAt,
+        },
+      });
+    });
     console.error("Failed to send OTP email.");
     throw new HttpError(502, "Something went wrong while sending the OTP.");
   }
+
+  await prisma.activity.create({
+    data: {
+      cardId: card.id,
+      courierId,
+      action: ACTIVITY.OTP_SENT,
+      message: `OTP sent by email to ${maskEmail(card.customer.email)}`,
+    },
+  });
 
   return serializeCard(created.card, created.otp);
 }

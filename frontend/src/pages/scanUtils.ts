@@ -1,7 +1,7 @@
 import type { DeliveryCard } from "../api/types";
 
 export type ParsedScanResult = {
-  card: { id: string; identifier: string; status: string } | null;
+  card: DeliveryCard | null;
   alreadyInCustody: boolean;
 };
 
@@ -9,19 +9,59 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === "object" ? (value as Record<string, unknown>) : null;
 }
 
-function readCard(value: unknown): ParsedScanResult["card"] {
+function readString(record: Record<string, unknown>, key: string) {
+  return typeof record[key] === "string" ? record[key] : "";
+}
+
+function readCustomer(value: unknown): DeliveryCard["customer"] {
+  const record = asRecord(value);
+  if (!record) {
+    return { id: "", fullName: "", email: "", phone: null, address: "", city: null };
+  }
+  return {
+    id: readString(record, "id"),
+    fullName: readString(record, "fullName"),
+    email: readString(record, "email"),
+    phone: typeof record.phone === "string" ? record.phone : null,
+    address: readString(record, "address"),
+    city: typeof record.city === "string" ? record.city : null,
+  };
+}
+
+function readCourier(value: unknown): DeliveryCard["courier"] {
   const record = asRecord(value);
   if (!record) return null;
-  const id = typeof record.id === "string" ? record.id : "";
+  const id = readString(record, "id");
   if (!id) return null;
-  const identifier =
-    typeof record.identifier === "string" && record.identifier.trim()
-      ? record.identifier.trim()
-      : typeof record.qrToken === "string" && record.qrToken.trim()
-        ? record.qrToken.trim()
-        : id;
-  const status = typeof record.status === "string" ? record.status : "IN_CUSTODY";
-  return { id, identifier, status };
+  return {
+    id,
+    fullName: readString(record, "fullName"),
+    email: readString(record, "email"),
+  };
+}
+
+function readCard(value: unknown): DeliveryCard | null {
+  const record = asRecord(value);
+  if (!record) return null;
+  const id = readString(record, "id");
+  if (!id) return null;
+  const identifier = readString(record, "identifier").trim() || id;
+  const status = readString(record, "status") || "IN_CUSTODY";
+
+  return {
+    id,
+    identifier,
+    last4: readString(record, "last4"),
+    cardType: readString(record, "cardType"),
+    status: status as DeliveryCard["status"],
+    scannedAt: typeof record.scannedAt === "string" ? record.scannedAt : null,
+    otpSentAt: typeof record.otpSentAt === "string" ? record.otpSentAt : null,
+    deliveredAt: typeof record.deliveredAt === "string" ? record.deliveredAt : null,
+    createdAt: readString(record, "createdAt"),
+    updatedAt: readString(record, "updatedAt"),
+    customer: readCustomer(record.customer),
+    courier: readCourier(record.courier),
+  };
 }
 
 export function parseScanResponse(payload: unknown): ParsedScanResult {
@@ -80,27 +120,5 @@ export function mapScanError(error: unknown) {
 }
 
 export function toDisplayCard(card: ParsedScanResult["card"]): DeliveryCard | null {
-  if (!card) return null;
-  return {
-    id: card.id,
-    identifier: card.identifier,
-    qrToken: card.identifier,
-    last4: "",
-    cardType: "",
-    status: card.status as DeliveryCard["status"],
-    scannedAt: null,
-    otpSentAt: null,
-    deliveredAt: null,
-    createdAt: "",
-    updatedAt: "",
-    customer: {
-      id: "",
-      fullName: "",
-      email: "",
-      phone: null,
-      address: "",
-      city: null,
-    },
-    courier: null,
-  };
+  return card;
 }

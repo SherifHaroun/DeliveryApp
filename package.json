@@ -18,7 +18,11 @@
     "setup": "npm run db:migrate && npm run db:seed",
     "build": "npm run build -w backend && npm run build -w frontend",
     "build:backend": "npm run build -w backend",
-    "start": "npm start -w backend"
+    "start": "npm start -w backend",
+    "typecheck": "npm run typecheck -w backend && npm run typecheck -w frontend",
+    "test": "npm run test -w backend && npm run test -w frontend",
+    "test:watch": "concurrently -n api,web -c blue,green \"npm run test:watch -w backend\" \"npm run test:watch -w frontend\"",
+    "test:coverage": "npm run test:coverage -w backend && npm run test:coverage -w frontend"
   },
   "engines": {
     "node": ">=20"

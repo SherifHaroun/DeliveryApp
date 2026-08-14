@@ -1,4 +1,5 @@
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
+import { getOtpPepper } from "../config/env.js";
 
 export const OTP_EXPIRY_MINUTES = 5;
 export const OTP_MAX_ATTEMPTS = Number(process.env.OTP_MAX_ATTEMPTS ?? 5);
@@ -6,7 +7,7 @@ export const OTP_RESEND_COOLDOWN_SECONDS = Number(process.env.OTP_RESEND_COOLDOW
 export const OTP_MAX_SENDS_PER_CARD_PER_HOUR = Number(process.env.OTP_MAX_SENDS_PER_CARD_PER_HOUR ?? 5);
 export const OTP_MAX_SENDS_PER_COURIER_PER_HOUR = Number(process.env.OTP_MAX_SENDS_PER_COURIER_PER_HOUR ?? 20);
 
-const pepper = process.env.OTP_PEPPER ?? "dev-otp-pepper";
+const pepper = getOtpPepper();
 
 export function generateOtpCode() {
   return String(randomInt(100000, 1000000));

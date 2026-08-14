@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { api, clearToken, getToken, setToken } from "../api/client";
+import { api, clearToken, getToken, setToken, setUnauthorizedHandler } from "../api/client";
 import type { AuthUser } from "../api/types";
 
 type AuthContextValue = {
@@ -34,7 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setUser(null);
+    });
     void refresh();
+    return () => setUnauthorizedHandler(null);
   }, []);
 
   const value = useMemo<AuthContextValue>(

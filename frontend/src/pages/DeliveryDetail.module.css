@@ -49,12 +49,39 @@
   color: var(--navy);
 }
 
-.cardLine {
-  margin: 10px 0 8px;
-  font-weight: 650;
-  font-size: 16px;
+.receipt,
+.customerSummary {
+  display: grid;
+  gap: 12px;
+  text-align: left;
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 18px;
+  margin: 20px 0 24px;
 }
 
-.successPage .muted {
-  margin-bottom: 24px;
+.customerSummary {
+  margin: 0;
+}
+
+.receipt div,
+.customerSummary div {
+  display: grid;
+  gap: 4px;
+}
+
+.receipt dt,
+.customerSummary dt {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.receipt dd,
+.customerSummary dd {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--text);
 }

@@ -56,7 +56,6 @@ export function serializeCard(
   return {
     id: card.id,
     identifier: card.identifier,
-    qrToken: card.qrToken,
     last4: card.last4,
     cardType: card.cardType,
     status: card.status,

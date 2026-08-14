@@ -78,3 +78,47 @@
   color: var(--muted);
   font-size: 13px;
 }
+
+.historyAction {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.historyMeta {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0 14px;
+  margin-bottom: 14px;
+  min-height: 52px;
+  color: var(--muted);
+}
+
+.search input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 16px;
+  min-height: 50px;
+}
+
+.search input:focus {
+  outline: none;
+}
+
+.errorPanel {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}

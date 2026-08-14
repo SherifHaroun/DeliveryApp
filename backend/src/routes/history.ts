@@ -40,6 +40,7 @@ historyRouter.get(
         actionLabel: activityLabel(row.action),
         message: row.message,
         createdAt: row.createdAt,
+        cardId: row.card.id,
         cardIdentifier: row.card.identifier,
         customerName: row.card.customer.fullName,
         courierName: row.courier.fullName,

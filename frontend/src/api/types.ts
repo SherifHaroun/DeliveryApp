@@ -29,7 +29,6 @@ export type LastAction = {
 export type DeliveryCard = {
   id: string;
   identifier: string;
-  qrToken: string;
   last4: string;
   cardType: string;
   status: CardStatus;
@@ -76,6 +75,7 @@ export type HistoryEvent = {
   actionLabel: string;
   message: string;
   createdAt: string;
+  cardId: string;
   cardIdentifier: string;
   customerName: string;
   courierName: string;

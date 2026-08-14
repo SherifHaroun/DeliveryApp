@@ -2,7 +2,21 @@ import "dotenv/config";
 import { prisma } from "../src/lib/prisma.ts";
 import { hashOtp } from "../src/lib/otp.ts";
 
-const base = "http://localhost:4100";
+function requiredEnv(name: string) {
+  const value = process.env[name]?.trim() ?? "";
+  if (!value) {
+    throw new Error(
+      `Missing ${name}. Set SECURITY_CHECK_EMAIL, SECURITY_CHECK_PASSWORD, SECURITY_CHECK_SECOND_EMAIL, and SECURITY_CHECK_SECOND_PASSWORD for local seeded courier accounts. Do not commit those values.`,
+    );
+  }
+  return value;
+}
+
+const base = process.env.SECURITY_CHECK_API_URL?.trim() || "http://localhost:4100";
+const loginEmail = requiredEnv("SECURITY_CHECK_EMAIL").toLowerCase();
+const loginPassword = requiredEnv("SECURITY_CHECK_PASSWORD");
+const secondEmail = requiredEnv("SECURITY_CHECK_SECOND_EMAIL").toLowerCase();
+const secondPassword = requiredEnv("SECURITY_CHECK_SECOND_PASSWORD");
 
 type Check = { name: string; pass: boolean; detail: string };
 const results: Check[] = [];
@@ -27,23 +41,35 @@ function leakedOtp(payload: unknown) {
   return /"code"\s*:/.test(text) || /"codeHash"\s*:/.test(text);
 }
 
+function leakedQrToken(payload: unknown) {
+  return /"qrToken"\s*:/.test(JSON.stringify(payload));
+}
+
 async function main() {
   const login = await req("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "courier@delivery.local", password: "Courier123!" }),
+    body: JSON.stringify({ email: loginEmail, password: loginPassword }),
   });
   const token = login.data.token as string;
-  record("Login", Boolean(token), login.data.user?.fullName ?? "no token");
+  if (!token) {
+    record("Login", false, "login failed");
+    throw new Error("Primary courier login failed. Check SECURITY_CHECK_EMAIL and SECURITY_CHECK_PASSWORD.");
+  }
+  record("Login", true, login.data.user?.fullName ?? "signed in");
   const h = auth(token);
 
   const sara = await req("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "sara@delivery.local", password: "Courier123!" }),
+    body: JSON.stringify({ email: secondEmail, password: secondPassword }),
   });
   const saraToken = sara.data.token as string;
-  record("Second courier login", Boolean(saraToken), sara.data.user?.fullName ?? "failed");
+  if (!saraToken) {
+    record("Second courier login", false, "login failed");
+    throw new Error("Second courier login failed. Check SECURITY_CHECK_SECOND_EMAIL and SECURITY_CHECK_SECOND_PASSWORD.");
+  }
+  record("Second courier login", true, sara.data.user?.fullName ?? "signed in");
 
   const invalid = await req("/api/scan/lookup", {
     method: "POST",
@@ -95,13 +121,18 @@ async function main() {
 
   const cardId = first.data.card.id as string;
   record("Scan → In Custody", first.data.card.status === "IN_CUSTODY", first.data.card.status);
+  record(
+    "Card JSON does not include qrToken",
+    !leakedQrToken(first.data) && !leakedQrToken(second.data),
+    leakedQrToken(first.data) || leakedQrToken(second.data) ? "leaked" : "clean",
+  );
 
   const roleHack = await req("/api/profile", {
     method: "PATCH",
     headers: h,
     body: JSON.stringify({ fullName: "Karim Hassan", role: "ADMIN" }),
   });
-  const me = await prisma.user.findFirst({ where: { email: "courier@delivery.local" } });
+  const me = await prisma.user.findFirst({ where: { email: loginEmail } });
   record("Cannot escalate role via profile", me?.role === "COURIER" && roleHack.data.role === "COURIER", me?.role ?? "missing");
 
   const statusHack = await req(`/api/deliveries/${cardId}/status`, {

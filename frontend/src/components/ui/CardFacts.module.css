@@ -1,3 +1,17 @@
+.wrap {
+  display: grid;
+  gap: 16px;
+}
+
+.sectionTitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .facts {
   display: grid;
   gap: 14px;

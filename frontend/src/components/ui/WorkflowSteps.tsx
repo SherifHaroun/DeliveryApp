@@ -4,6 +4,29 @@ import styles from "./WorkflowSteps.module.css";
 
 const STEPS = ["Scan", "Custody", "Send OTP", "Verify", "Delivered"] as const;
 
+export const WORKFLOW_GUIDE = [
+  {
+    label: "Scan Card",
+    text: "Scan the QR code attached to the card.",
+  },
+  {
+    label: "In Custody",
+    text: "The card is assigned to the courier.",
+  },
+  {
+    label: "Send OTP",
+    text: "An OTP is sent to the customer's registered email.",
+  },
+  {
+    label: "Verify OTP",
+    text: "The customer verification is completed.",
+  },
+  {
+    label: "Delivered",
+    text: "The card is successfully delivered.",
+  },
+] as const;
+
 export function workflowIndex(status?: CardStatus | "SCAN") {
   switch (status) {
     case "SCAN":
@@ -38,5 +61,23 @@ export function WorkflowSteps({
         );
       })}
     </ol>
+  );
+}
+
+export function HowItWorks() {
+  return (
+    <div className={styles.guide}>
+      <WorkflowSteps current={-1} />
+      <ol className={styles.captions}>
+        {WORKFLOW_GUIDE.map((step, index) => (
+          <li key={step.label}>
+            <strong>
+              {index + 1}. {step.label}
+            </strong>
+            <span>{step.text}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }

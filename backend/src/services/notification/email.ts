@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { isMemoryDataMode } from "../../config/dataMode.js";
 import { isResendConfigured, RESEND_API_KEY, RESEND_FROM } from "../../config/resend.js";
 import type { NotificationResult, OtpMessage } from "./types.js";
 
@@ -31,6 +32,11 @@ function emailHtml(code: string, expiresInMinutes: number) {
 }
 
 export async function sendOtpEmail(message: OtpMessage): Promise<NotificationResult> {
+  if (isMemoryDataMode()) {
+    console.log(`[DEV] OTP for card ${message.cardIdentifier}: ${message.code}`);
+    return { channel: "EMAIL", sent: true };
+  }
+
   if (!isResendConfigured()) {
     throw new Error("Resend is not configured.");
   }

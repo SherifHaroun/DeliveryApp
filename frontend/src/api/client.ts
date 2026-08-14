@@ -23,10 +23,27 @@ export function getToken() {
 
 export function setToken(token: string) {
   localStorage.setItem(TOKEN_KEY, token);
+  unauthorizedHandled = false;
 }
 
 export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
+}
+
+type UnauthorizedHandler = () => void;
+
+let onUnauthorized: UnauthorizedHandler | null = null;
+let unauthorizedHandled = false;
+
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null) {
+  onUnauthorized = handler;
+}
+
+function notifyUnauthorized() {
+  if (unauthorizedHandled) return;
+  unauthorizedHandled = true;
+  clearToken();
+  onUnauthorized?.();
 }
 
 export class ApiError extends Error {
@@ -64,6 +81,9 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   if (!response.ok) {
     const raw = String(data.error ?? "");
     console.error("API error", path, response.status, raw || data);
+    if (response.status === 401 && !path.includes("/auth/login")) {
+      notifyUnauthorized();
+    }
     throw new ApiError(response.status, friendlyError(path, response.status, raw), data);
   }
 
@@ -73,6 +93,9 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
 function friendlyError(path: string, status: number, message: string) {
   if (status === 401 && path.includes("/auth/login")) {
     return "Invalid email or password.";
+  }
+  if (path.includes("/auth/login") && (status === 0 || status >= 500)) {
+    return "Unable to reach the server. Make sure the API is running.";
   }
   if (status === 401) {
     return "Your session has expired. Please sign in again.";

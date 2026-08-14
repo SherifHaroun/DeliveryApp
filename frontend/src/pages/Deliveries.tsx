@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Package } from "lucide-react";
+import { Package, Search } from "lucide-react";
 import { api } from "../api/client";
 import type { DeliveryCard as DeliveryCardType } from "../api/types";
+import { Button } from "../components/ui/Button";
 import { DeliveryCard } from "../components/ui/DeliveryCard";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Skeleton } from "../components/ui/Skeleton";
@@ -16,25 +17,48 @@ const filters = [
 
 export function DeliveriesPage() {
   const [filter, setFilter] = useState(filters[0]);
+  const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [cards, setCards] = useState<DeliveryCardType[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [query]);
 
   useEffect(() => {
     const params = new URLSearchParams();
     if (filter.status) params.set("status", filter.status);
+    if (debouncedQuery) params.set("q", debouncedQuery);
     params.set("sort", "updated");
     params.set("dir", "desc");
     setCards(null);
+    setError(null);
     api<DeliveryCardType[]>(`/api/deliveries?${params.toString()}`)
       .then(setCards)
       .catch((err: Error) => setError(err.message));
-  }, [filter]);
+  }, [filter, debouncedQuery, reload]);
+
+  const searching = Boolean(debouncedQuery);
 
   return (
     <div>
       <header className={styles.header}>
         <h1>Deliveries</h1>
       </header>
+
+      <label className={styles.search}>
+        <Search size={18} aria-hidden="true" />
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search card ID or customer"
+          aria-label="Search deliveries"
+        />
+      </label>
 
       <div className={styles.filters}>
         {filters.map((item) => (
@@ -49,7 +73,14 @@ export function DeliveriesPage() {
         ))}
       </div>
 
-      {error ? <p className="banner-error">{error}</p> : null}
+      {error ? (
+        <div className={styles.errorPanel}>
+          <p className="banner-error">{error}</p>
+          <Button variant="ghost" onClick={() => setReload((value) => value + 1)}>
+            Retry
+          </Button>
+        </div>
+      ) : null}
 
       {cards === null && !error ? (
         <div className={styles.list}>
@@ -57,19 +88,19 @@ export function DeliveriesPage() {
           <Skeleton />
           <Skeleton />
         </div>
-      ) : !cards?.length ? (
+      ) : !error && !cards?.length ? (
         <EmptyState
           icon={<Package size={22} />}
-          title="No deliveries"
-          text="Scan a card to start a delivery."
+          title={searching ? "No Cards Found" : "No deliveries"}
+          text={searching ? "No cards matched your search." : "Scan a card to start a delivery."}
         />
-      ) : (
+      ) : cards?.length ? (
         <div className={styles.list}>
           {cards.map((card) => (
             <DeliveryCard key={card.id} card={card} />
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

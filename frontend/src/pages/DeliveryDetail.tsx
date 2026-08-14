@@ -2,17 +2,21 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, ApiError } from "../api/client";
 import type { DeliveryCard as DeliveryCardType } from "../api/types";
+import { useAuth } from "../auth/AuthContext";
 import { Button } from "../components/ui/Button";
 import { CardFacts } from "../components/ui/CardFacts";
 import { Countdown } from "../components/ui/Countdown";
 import { OtpInput } from "../components/ui/OtpInput";
 import { PageHeader } from "../components/ui/PageHeader";
+import { StatusBadge } from "../components/ui/StatusBadge";
 import { SuccessMark } from "../components/ui/SuccessMark";
+import { formatWhen } from "../lib/format";
 import styles from "./DeliveryDetail.module.css";
 
 export function DeliveryDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [card, setCard] = useState<DeliveryCardType | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -92,14 +96,37 @@ export function DeliveryDetailPage() {
     !otp || otp.expired || otp.locked || new Date(otp.resendAvailableAt).getTime() <= Date.now();
 
   if (card.status === "DELIVERED") {
+    const deliveredBy = card.courier?.fullName?.trim() || user?.fullName || "—";
     return (
       <div className={styles.successPage}>
         <SuccessMark />
-        <h1>Delivery Confirmed</h1>
-        <p className={styles.cardLine}>{card.identifier}</p>
-        <p className={styles.muted}>The delivery has been successfully confirmed.</p>
+        <h1>Card Delivered Successfully</h1>
+        <dl className={styles.receipt}>
+          <div>
+            <dt>Card</dt>
+            <dd>{card.identifier}</dd>
+          </div>
+          <div>
+            <dt>Customer</dt>
+            <dd>{card.customer?.fullName?.trim() || "—"}</dd>
+          </div>
+          <div>
+            <dt>Delivered By</dt>
+            <dd>{deliveredBy}</dd>
+          </div>
+          <div>
+            <dt>Date & Time</dt>
+            <dd>{formatWhen(card.deliveredAt)}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>
+              <StatusBadge status={card.status} />
+            </dd>
+          </div>
+        </dl>
         <Button block onClick={() => navigate("/")}>
-          Done
+          Back to Dashboard
         </Button>
       </div>
     );
@@ -107,21 +134,37 @@ export function DeliveryDetailPage() {
 
   return (
     <div>
-      <PageHeader title={card.status === "OTP_SENT" ? "OTP Verification" : "Card"} backTo="/deliveries" />
+      <PageHeader
+        title={card.status === "OTP_SENT" ? "OTP Verification" : "Card In Your Custody"}
+        backTo="/deliveries"
+      />
 
       {card.status === "IN_CUSTODY" ? (
         <section className={styles.panel}>
           <CardFacts card={card} />
           {error ? <p className="banner-error">{error}</p> : null}
           <Button block loading={busy} onClick={() => void sendOtp()}>
-            {busy ? "Sending..." : "Send OTP"}
+            {busy ? "Sending..." : "Send OTP to Customer"}
           </Button>
         </section>
       ) : null}
 
       {card.status === "OTP_SENT" ? (
         <section className={styles.panel}>
-          <p className={styles.lead}>Enter the 6-digit code sent to the customer.</p>
+          <dl className={styles.customerSummary}>
+            <div>
+              <dt>Customer</dt>
+              <dd>{card.customer?.fullName?.trim() || "—"}</dd>
+            </div>
+            <div>
+              <dt>Email</dt>
+              <dd>{otp?.destination || card.customer?.email || "—"}</dd>
+            </div>
+          </dl>
+          <p className={styles.lead}>
+            An OTP has been sent to the customer's registered email. Enter the 6-digit code to verify
+            delivery.
+          </p>
           {otp?.expired || !otp ? (
             <p className={styles.countdown}>OTP expired. Send a new OTP.</p>
           ) : (
@@ -141,7 +184,7 @@ export function DeliveryDetailPage() {
               loading={busy}
               disabled={code.length !== 6 || Boolean(otp?.expired) || Boolean(otp?.locked)}
             >
-              {busy ? "Verifying..." : "Verify"}
+              {busy ? "Verifying..." : "Verify OTP"}
             </Button>
           </form>
           <Button variant="ghost" block disabled={busy || !canResend} onClick={() => void sendOtp()}>

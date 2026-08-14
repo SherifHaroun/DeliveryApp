@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import { prisma } from "./lib/prisma.js";
+import { isMemoryDataMode } from "./config/dataMode.js";
 import { authRouter } from "./routes/auth.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { deliveriesRouter } from "./routes/deliveries.js";
@@ -56,7 +57,12 @@ export function createApp() {
   app.get("/api/health", async (_req, res) => {
     try {
       await prisma.$queryRaw`SELECT 1`;
-      res.json({ ok: true, service: "delivery-app", database: "connected", release: "2026-08-13" });
+      res.json({
+        ok: true,
+        service: "delivery-app",
+        database: isMemoryDataMode() ? "memory" : "connected",
+        release: "2026-08-13",
+      });
     } catch {
       res.status(503).json({ ok: false, service: "delivery-app", database: "disconnected" });
     }
