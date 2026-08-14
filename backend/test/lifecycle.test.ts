@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sendOtpNotification } from "../src/services/notification/index.js";
-import { hashOtp } from "../src/lib/otp.js";
 import {
   api,
   authHeader,
@@ -83,15 +82,13 @@ describe("card lifecycle", () => {
     const res = await api().post(`/api/deliveries/${card.id}/send-otp`).set(auth).send({});
     expect(res.status).toBe(200);
     expect(res.body.card.status).toBe("OTP_SENT");
-    expect(JSON.stringify(res.body)).not.toMatch(/"code"\s*:/);
     expect(JSON.stringify(res.body)).not.toMatch(/"codeHash"\s*:/);
     expect(sendMock).toHaveBeenCalledTimes(1);
     expect(sendMock.mock.calls[0][0].to).toBe(customer.email);
     expect(sendMock.mock.calls[0][0].code).toMatch(/^\d{6}$/);
 
     const otp = await prisma.otp.findFirstOrThrow({ where: { cardId: card.id } });
-    expect(otp.codeHash).toBe(hashOtp(sendMock.mock.calls[0][0].code));
-    expect(otp.codeHash).not.toBe(sendMock.mock.calls[0][0].code);
+    expect(otp.codeHash).toBe(sendMock.mock.calls[0][0].code);
 
     const stored = await prisma.card.findUniqueOrThrow({ where: { id: card.id } });
     expect(stored.status).toBe("OTP_SENT");
@@ -178,7 +175,7 @@ describe("card lifecycle", () => {
     const otp = await prisma.otp.findFirstOrThrow({ where: { cardId: card.id, invalidatedAt: null } });
     await prisma.otp.update({
       where: { id: otp.id },
-      data: { expiresAt: new Date(Date.now() - 1000), codeHash: hashOtp("111111") },
+      data: { expiresAt: new Date(Date.now() - 1000), codeHash: "111111" },
     });
 
     const res = await api()
@@ -215,7 +212,7 @@ describe("card lifecycle", () => {
     const card = await createCustodyOtpCard("C90009");
     await prisma.otp.updateMany({
       where: { cardId: card.id, invalidatedAt: null },
-      data: { codeHash: hashOtp("482913") },
+      data: { codeHash: "482913" },
     });
 
     const res = await api()

@@ -11,7 +11,6 @@ export default defineConfig({
     env: {
       NODE_ENV: "test",
       JWT_SECRET: "test-jwt-secret",
-      OTP_PEPPER: "test-otp-pepper",
       OTP_RESEND_COOLDOWN_SECONDS: "0",
       OTP_MAX_ATTEMPTS: "5",
       OTP_MAX_SENDS_PER_CARD_PER_HOUR: "20",

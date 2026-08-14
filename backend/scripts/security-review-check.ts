@@ -1,6 +1,5 @@
 import "dotenv/config";
 import { prisma } from "../src/lib/prisma.ts";
-import { hashOtp } from "../src/lib/otp.ts";
 
 function requiredEnv(name: string) {
   const value = process.env[name]?.trim() ?? "";
@@ -197,7 +196,7 @@ async function main() {
 
   await prisma.otp.update({
     where: { id: otpRow.id },
-    data: { expiresAt: new Date(Date.now() - 1000), codeHash: hashOtp("111111") },
+    data: { expiresAt: new Date(Date.now() - 1000), codeHash: "111111" },
   });
   const expired = await req(`/api/deliveries/${cardId}/verify-otp`, {
     method: "POST",
@@ -213,7 +212,7 @@ async function main() {
 
   await prisma.otp.update({
     where: { id: otpRow.id },
-    data: { expiresAt: new Date(Date.now() + 10 * 60 * 1000), attempts: 0, invalidatedAt: null, verifiedAt: null, codeHash: hashOtp("222222") },
+    data: { expiresAt: new Date(Date.now() + 10 * 60 * 1000), attempts: 0, invalidatedAt: null, verifiedAt: null, codeHash: "222222" },
   });
   await prisma.card.update({ where: { id: cardId }, data: { status: "OTP_SENT" } });
 
@@ -241,7 +240,7 @@ async function main() {
     where: { cardId: custodyCard.id, invalidatedAt: null },
     orderBy: { createdAt: "desc" },
   });
-  await prisma.otp.update({ where: { id: liveOtp!.id }, data: { codeHash: hashOtp("482913") } });
+  await prisma.otp.update({ where: { id: liveOtp!.id }, data: { codeHash: "482913" } });
   const ok = await req(`/api/deliveries/${custodyCard.id}/verify-otp`, {
     method: "POST",
     headers: h,

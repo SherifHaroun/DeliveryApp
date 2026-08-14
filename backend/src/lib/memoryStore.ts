@@ -1,6 +1,5 @@
 import bcrypt from "bcrypt";
 import { randomUUID } from "node:crypto";
-import { hashOtp } from "./otp.js";
 
 type UserRow = {
   id: string;
@@ -245,7 +244,7 @@ export function seedMemoryStore() {
     id: "mem-otp-seed",
     cardId: otpSent.id,
     courierId: courier.id,
-    codeHash: hashOtp("482913"),
+    codeHash: "482913",
     channel: "EMAIL",
     attempts: 0,
     expiresAt: new Date(Date.now() + 5 * 60 * 1000),

@@ -4,9 +4,7 @@ import { HttpError } from "../lib/http.js";
 import { maskEmail } from "../lib/mask.js";
 import {
   generateOtpCode,
-  hashOtp,
   otpExpiryDate,
-  otpMatches,
   OTP_EXPIRY_MINUTES,
   OTP_MAX_ATTEMPTS,
   OTP_MAX_SENDS_PER_CARD_PER_HOUR,
@@ -15,6 +13,7 @@ import {
 } from "../lib/otp.js";
 import { ACTIVITY } from "../lib/activity.js";
 import { CARD_STATUSES, serializeCard } from "../lib/serialize.js";
+import { isDemoMode } from "../config/env.js";
 import { sendOtpNotification } from "./notification/index.js";
 
 const cardInclude = { customer: true, courier: true } as const;
@@ -104,7 +103,7 @@ export async function sendOtp(cardId: string, courierId: string) {
       data: {
         cardId: card.id,
         courierId,
-        codeHash: hashOtp(code),
+        codeHash: code,
         channel: "EMAIL",
         expiresAt,
       },
@@ -119,40 +118,42 @@ export async function sendOtp(cardId: string, courierId: string) {
     return { otp, card: updated };
   });
 
-  try {
-    await sendOtpNotification({
-      channel: "EMAIL",
-      to: card.customer.email,
-      customerName: card.customer.fullName,
-      code,
-      cardIdentifier: card.identifier,
-      last4: card.last4,
-      expiresInMinutes: OTP_EXPIRY_MINUTES,
-    });
-  } catch {
-    await prisma.$transaction(async (tx) => {
-      await tx.otp.update({
-        where: { id: created.otp.id },
-        data: { invalidatedAt: new Date() },
+  if (!isDemoMode()) {
+    try {
+      await sendOtpNotification({
+        channel: "EMAIL",
+        to: card.customer.email,
+        customerName: card.customer.fullName,
+        code,
+        cardIdentifier: card.identifier,
+        last4: card.last4,
+        expiresInMinutes: OTP_EXPIRY_MINUTES,
       });
-
-      if (previousOtpId) {
+    } catch {
+      await prisma.$transaction(async (tx) => {
         await tx.otp.update({
-          where: { id: previousOtpId },
-          data: { invalidatedAt: null },
+          where: { id: created.otp.id },
+          data: { invalidatedAt: new Date() },
         });
-      }
 
-      await tx.card.update({
-        where: { id: card.id },
-        data: {
-          status: previousStatus,
-          otpSentAt: previousOtpSentAt,
-        },
+        if (previousOtpId) {
+          await tx.otp.update({
+            where: { id: previousOtpId },
+            data: { invalidatedAt: null },
+          });
+        }
+
+        await tx.card.update({
+          where: { id: card.id },
+          data: {
+            status: previousStatus,
+            otpSentAt: previousOtpSentAt,
+          },
+        });
       });
-    });
-    console.error("Failed to send OTP email.");
-    throw new HttpError(502, "Something went wrong while sending the OTP.");
+      console.error("Failed to send OTP email.");
+      throw new HttpError(502, "Something went wrong while sending the OTP.");
+    }
   }
 
   await prisma.activity.create({
@@ -164,7 +165,10 @@ export async function sendOtp(cardId: string, courierId: string) {
     },
   });
 
-  return serializeCard(created.card, created.otp);
+  return {
+    card: serializeCard(created.card, created.otp),
+    demoOtp: isDemoMode() ? code : undefined,
+  };
 }
 
 export async function verifyOtp(cardId: string, courierId: string, rawCode: string) {
@@ -210,7 +214,7 @@ export async function verifyOtp(cardId: string, courierId: string, rawCode: stri
       return { type: "expired" as const };
     }
 
-    if (!otpMatches(code, otp.codeHash)) {
+    if (otp.codeHash !== code) {
       const attempts = otp.attempts + 1;
       const locked = attempts >= OTP_MAX_ATTEMPTS;
       await tx.otp.update({

@@ -77,11 +77,9 @@ Pending demo tokens are also printed in the seed output.
 
 ## Email / OTP
 
-OTP emails are sent with Resend. Set `RESEND_API_KEY` in `backend/.env`. If the key is missing in database mode, sending an OTP fails with an error; there is no SMTP fallback.
+OTP codes are generated on the backend as random 6-digit values, stored directly, and expire after 5 minutes. With `DEMO_MODE=true`, Send OTP returns `demoOtp` to the courier UI and does not call Resend.
 
-In `BACKEND_DATA_MODE=memory` only, OTP email is skipped and the code is printed in the backend console as `[DEV] OTP for card …`.
-
-Production also requires `JWT_SECRET` and `OTP_PEPPER`. The API will not start without them.
+Production with `DEMO_MODE=false` requires `JWT_SECRET`.
 
 ## Tests
 
@@ -110,7 +108,7 @@ npm run test:watch
 npm run test:coverage
 ```
 
-CI (GitHub Actions) starts its own Postgres service and uses dummy `JWT_SECRET` / `OTP_PEPPER` values. It does not use Resend or production secrets.
+CI (GitHub Actions) starts its own Postgres service and uses a dummy `JWT_SECRET`. It does not use Resend or production secrets.
 
 ## Environment
 
@@ -119,8 +117,8 @@ Copy `backend/.env.example` to `backend/.env`. Never commit `backend/.env`.
 - `BACKEND_DATA_MODE` — `memory` for a temporary in-memory store (no PostgreSQL); unset or `database` for Prisma/PostgreSQL. Forbidden in production.
 - `DATABASE_URL` — local development database used by `npm run setup` and database mode. Not required in memory mode.
 - `TEST_DATABASE_URL` — isolated `delivery_test` database used only by backend tests
-- `JWT_SECRET` / `OTP_PEPPER` — local placeholders are fine in development; production requires real values
-- `RESEND_API_KEY` — backend-only; required to send OTP email in database mode
+- `JWT_SECRET` — local placeholders are fine in development; required in production when `DEMO_MODE` is not true
+- `DEMO_MODE` — `true` for the demo OTP flow (plaintext OTP, `demoOtp` in the send-otp response)
 
 The backend uses Prisma with PostgreSQL. On Railway, the Postgres plugin provides `DATABASE_URL` automatically — do not hardcode a production URL.
 

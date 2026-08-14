@@ -10,7 +10,6 @@ dotenv.config({ path: path.join(backendRoot, ".env") });
 
 process.env.NODE_ENV = "test";
 process.env.JWT_SECRET ??= "test-jwt-secret";
-process.env.OTP_PEPPER ??= "test-otp-pepper";
 process.env.OTP_RESEND_COOLDOWN_SECONDS ??= "0";
 delete process.env.RESEND_API_KEY;
 delete process.env.BACKEND_DATA_MODE;

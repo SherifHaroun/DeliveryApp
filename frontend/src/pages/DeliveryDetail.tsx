@@ -21,6 +21,7 @@ export function DeliveryDetailPage() {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [demoOtp, setDemoOtp] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [tick, setTick] = useState(0);
 
@@ -39,13 +40,15 @@ export function DeliveryDetailPage() {
     setBusy(true);
     setError(null);
     setMessage(null);
+    setDemoOtp(null);
     try {
-      const result = await api<{ card: DeliveryCardType }>(`/api/deliveries/${id}/send-otp`, {
+      const result = await api<{ card: DeliveryCardType; demoOtp?: string }>(`/api/deliveries/${id}/send-otp`, {
         method: "POST",
       });
       setCard(result.card);
       setCode("");
       setMessage("OTP sent successfully");
+      if (result.demoOtp) setDemoOtp(result.demoOtp);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong while sending the OTP.");
     } finally {
@@ -174,6 +177,7 @@ export function DeliveryDetailPage() {
             </p>
           )}
           {message ? <p className="banner-success">{message}</p> : null}
+          {demoOtp ? <p className="banner-success">Demo OTP: {demoOtp}</p> : null}
           {error ? <p className="banner-error">{error}</p> : null}
           <form className={styles.otpForm} onSubmit={verifyOtp}>
             <OtpInput value={code} onChange={setCode} />

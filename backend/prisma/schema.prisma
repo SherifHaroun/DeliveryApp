@@ -62,7 +62,7 @@ model Otp {
   card          Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
   courierId     String
   courier       User      @relation(fields: [courierId], references: [id])
-  codeHash      String
+  codeHash      String // Demo stores the 6-digit OTP here. Column name kept to avoid a migration.
   channel       String    @default("EMAIL")
   attempts      Int       @default(0)
   expiresAt     DateTime
