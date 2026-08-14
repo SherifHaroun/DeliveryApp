@@ -2,6 +2,11 @@ function readEnv(name: string) {
   return process.env[name]?.trim() ?? "";
 }
 
+export function isDemoMode() {
+  const value = readEnv("DEMO_MODE").toLowerCase();
+  return value === "true" || value === "1" || value === "on" || value === "yes";
+}
+
 export function isProductionRuntime() {
   const nodeEnv = readEnv("NODE_ENV");
   if (nodeEnv === "development" || nodeEnv === "test") {
@@ -22,8 +27,11 @@ export function getJwtSecret() {
 export function getOtpPepper() {
   const value = readEnv("OTP_PEPPER");
   if (value) return value;
+  if (isDemoMode()) {
+    return "dev-otp-pepper";
+  }
   if (isProductionRuntime()) {
-    throw new Error("OTP_PEPPER is required in production");
+    throw new Error("OTP_PEPPER is required when DEMO_MODE=false");
   }
   return "dev-otp-pepper";
 }
@@ -39,7 +47,10 @@ export function getResendFrom() {
 export function assertProductionSecrets() {
   if (!isProductionRuntime()) return;
 
-  const missing = ["JWT_SECRET", "OTP_PEPPER"].filter((name) => !readEnv(name));
+  const missing = ["JWT_SECRET"].filter((name) => !readEnv(name));
+  if (!isDemoMode() && !readEnv("OTP_PEPPER")) {
+    missing.push("OTP_PEPPER");
+  }
   if (missing.length) {
     throw new Error(`Missing required production environment variables: ${missing.join(", ")}`);
   }
