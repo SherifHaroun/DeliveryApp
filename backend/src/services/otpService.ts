@@ -13,7 +13,6 @@ import {
 } from "../lib/otp.js";
 import { ACTIVITY } from "../lib/activity.js";
 import { CARD_STATUSES, serializeCard } from "../lib/serialize.js";
-import { isDemoMode } from "../config/env.js";
 import { sendOtpNotification } from "./notification/index.js";
 
 const cardInclude = { customer: true, courier: true } as const;
@@ -118,42 +117,40 @@ export async function sendOtp(cardId: string, courierId: string) {
     return { otp, card: updated };
   });
 
-  if (!isDemoMode()) {
-    try {
-      await sendOtpNotification({
-        channel: "EMAIL",
-        to: card.customer.email,
-        customerName: card.customer.fullName,
-        code,
-        cardIdentifier: card.identifier,
-        last4: card.last4,
-        expiresInMinutes: OTP_EXPIRY_MINUTES,
+  try {
+    await sendOtpNotification({
+      channel: "EMAIL",
+      to: card.customer.email,
+      customerName: card.customer.fullName,
+      code,
+      cardIdentifier: card.identifier,
+      last4: card.last4,
+      expiresInMinutes: OTP_EXPIRY_MINUTES,
+    });
+  } catch (error) {
+    await prisma.$transaction(async (tx) => {
+      await tx.otp.update({
+        where: { id: created.otp.id },
+        data: { invalidatedAt: new Date() },
       });
-    } catch {
-      await prisma.$transaction(async (tx) => {
+
+      if (previousOtpId) {
         await tx.otp.update({
-          where: { id: created.otp.id },
-          data: { invalidatedAt: new Date() },
+          where: { id: previousOtpId },
+          data: { invalidatedAt: null },
         });
+      }
 
-        if (previousOtpId) {
-          await tx.otp.update({
-            where: { id: previousOtpId },
-            data: { invalidatedAt: null },
-          });
-        }
-
-        await tx.card.update({
-          where: { id: card.id },
-          data: {
-            status: previousStatus,
-            otpSentAt: previousOtpSentAt,
-          },
-        });
+      await tx.card.update({
+        where: { id: card.id },
+        data: {
+          status: previousStatus,
+          otpSentAt: previousOtpSentAt,
+        },
       });
-      console.error("Failed to send OTP email.");
-      throw new HttpError(502, "Something went wrong while sending the OTP.");
-    }
+    });
+    console.error("Failed to send OTP email:", error instanceof Error ? error.message : "unknown error");
+    throw new HttpError(502, "Unable to send OTP. Please try again.");
   }
 
   await prisma.activity.create({
@@ -165,10 +162,7 @@ export async function sendOtp(cardId: string, courierId: string) {
     },
   });
 
-  return {
-    card: serializeCard(created.card, created.otp),
-    demoOtp: isDemoMode() ? code : undefined,
-  };
+  return serializeCard(created.card, created.otp);
 }
 
 export async function verifyOtp(cardId: string, courierId: string, rawCode: string) {
@@ -297,10 +291,10 @@ export async function verifyOtp(cardId: string, courierId: string, rawCode: stri
     throw new HttpError(400, "Too many incorrect attempts. Send a new OTP.");
   }
   if (outcome.type === "expired") {
-    throw new HttpError(400, "This OTP has expired. Send a new OTP.");
+    throw new HttpError(400, "OTP has expired");
   }
   if (outcome.type === "wrong") {
-    throw new HttpError(400, "Incorrect OTP.", {
+    throw new HttpError(400, "Invalid OTP", {
       attemptsRemaining: Math.max(0, OTP_MAX_ATTEMPTS - outcome.attempts),
     });
   }

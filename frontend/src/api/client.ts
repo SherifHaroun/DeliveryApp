@@ -103,7 +103,7 @@ function friendlyError(path: string, status: number, message: string) {
   if (path.includes("send-otp") && status >= 500) {
     return "Something went wrong while sending the OTP.";
   }
-  if (path.includes("verify-otp") && /incorrect|expired|used|attempt|6-digit/i.test(message)) {
+  if (path.includes("verify-otp") && /invalid|expired|used|attempt|6-digit/i.test(message)) {
     return message;
   }
   if (

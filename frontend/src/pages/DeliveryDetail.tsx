@@ -21,7 +21,6 @@ export function DeliveryDetailPage() {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [demoOtp, setDemoOtp] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [tick, setTick] = useState(0);
 
@@ -40,15 +39,13 @@ export function DeliveryDetailPage() {
     setBusy(true);
     setError(null);
     setMessage(null);
-    setDemoOtp(null);
     try {
-      const result = await api<{ card: DeliveryCardType; demoOtp?: string }>(`/api/deliveries/${id}/send-otp`, {
+      const result = await api<{ card: DeliveryCardType }>(`/api/deliveries/${id}/send-otp`, {
         method: "POST",
       });
       setCard(result.card);
       setCode("");
-      setMessage("OTP sent successfully");
-      if (result.demoOtp) setDemoOtp(result.demoOtp);
+      setMessage("OTP sent successfully. A verification code has been sent to the customer's email.");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong while sending the OTP.");
     } finally {
@@ -71,12 +68,7 @@ export function DeliveryDetailPage() {
       setCode("");
     } catch (err) {
       if (err instanceof ApiError) {
-        const remaining = err.details.attemptsRemaining;
-        setError(
-          typeof remaining === "number"
-            ? `${err.message} ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.`
-            : err.message,
-        );
+        setError(err.message);
         await load().catch(() => undefined);
       } else {
         setError("Could not verify OTP. Please try again.");
@@ -147,7 +139,7 @@ export function DeliveryDetailPage() {
           <CardFacts card={card} />
           {error ? <p className="banner-error">{error}</p> : null}
           <Button block loading={busy} onClick={() => void sendOtp()}>
-            {busy ? "Sending..." : "Send OTP to Customer"}
+            {busy ? "Sending..." : "Send OTP"}
           </Button>
         </section>
       ) : null}
@@ -176,8 +168,13 @@ export function DeliveryDetailPage() {
               <Countdown until={otp.expiresAt} expiredLabel="0:00" onExpire={() => setTick((value) => value + 1)} />
             </p>
           )}
-          {message ? <p className="banner-success">{message}</p> : null}
-          {demoOtp ? <p className="banner-success">Demo OTP: {demoOtp}</p> : null}
+          {message ? (
+            <p className="banner-success">
+              OTP sent successfully.
+              <br />
+              A verification code has been sent to the customer's email.
+            </p>
+          ) : null}
           {error ? <p className="banner-error">{error}</p> : null}
           <form className={styles.otpForm} onSubmit={verifyOtp}>
             <OtpInput value={code} onChange={setCode} />

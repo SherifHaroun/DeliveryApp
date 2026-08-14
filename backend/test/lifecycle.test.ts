@@ -83,6 +83,8 @@ describe("card lifecycle", () => {
     expect(res.status).toBe(200);
     expect(res.body.card.status).toBe("OTP_SENT");
     expect(JSON.stringify(res.body)).not.toMatch(/"codeHash"\s*:/);
+    expect(JSON.stringify(res.body)).not.toMatch(/demoOtp/);
+    expect(JSON.stringify(res.body)).not.toMatch(/"code"\s*:/);
     expect(sendMock).toHaveBeenCalledTimes(1);
     expect(sendMock.mock.calls[0][0].to).toBe(customer.email);
     expect(sendMock.mock.calls[0][0].code).toMatch(/^\d{6}$/);
@@ -165,6 +167,7 @@ describe("card lifecycle", () => {
       .set(auth)
       .send({ code: "000000" });
     expect(res.status).toBe(400);
+    expect(res.body.error).toBe("Invalid OTP");
     const stored = await prisma.card.findUniqueOrThrow({ where: { id: card.id } });
     expect(stored.status).toBe("OTP_SENT");
     expect(stored.deliveredAt).toBeNull();
@@ -183,7 +186,7 @@ describe("card lifecycle", () => {
       .set(auth)
       .send({ code: "111111" });
     expect(res.status).toBe(400);
-    expect(String(res.body.error).toLowerCase()).toContain("expired");
+    expect(res.body.error).toBe("OTP has expired");
     const stored = await prisma.card.findUniqueOrThrow({ where: { id: card.id } });
     expect(stored.status).toBe("OTP_SENT");
   });

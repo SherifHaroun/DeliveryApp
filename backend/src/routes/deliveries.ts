@@ -79,11 +79,8 @@ deliveriesRouter.post(
   asyncHandler(async (req, res) => {
     // Destination is always the customer's registered email from the database.
     void req.body;
-    const result = await sendOtp(req.params.id, req.user!.id);
-    res.json({
-      card: result.card,
-      ...(result.demoOtp ? { demoOtp: result.demoOtp } : {}),
-    });
+    const card = await sendOtp(req.params.id, req.user!.id);
+    res.json({ card });
   }),
 );
 

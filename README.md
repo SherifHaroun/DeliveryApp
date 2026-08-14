@@ -77,9 +77,9 @@ Pending demo tokens are also printed in the seed output.
 
 ## Email / OTP
 
-OTP codes are generated on the backend as random 6-digit values, stored directly, and expire after 5 minutes. With `DEMO_MODE=true`, Send OTP returns `demoOtp` to the courier UI and does not call Resend.
+OTP codes are generated on the backend as random 6-digit values, stored directly, and emailed to the customer with Resend. They expire after 5 minutes. The courier UI never receives the OTP.
 
-Production with `DEMO_MODE=false` requires `JWT_SECRET`.
+Production requires `JWT_SECRET`. Set `RESEND_API_KEY` and `RESEND_FROM_EMAIL` on Railway only.
 
 ## Tests
 
@@ -117,8 +117,10 @@ Copy `backend/.env.example` to `backend/.env`. Never commit `backend/.env`.
 - `BACKEND_DATA_MODE` — `memory` for a temporary in-memory store (no PostgreSQL); unset or `database` for Prisma/PostgreSQL. Forbidden in production.
 - `DATABASE_URL` — local development database used by `npm run setup` and database mode. Not required in memory mode.
 - `TEST_DATABASE_URL` — isolated `delivery_test` database used only by backend tests
-- `JWT_SECRET` — local placeholders are fine in development; required in production when `DEMO_MODE` is not true
-- `DEMO_MODE` — `true` for the demo OTP flow (plaintext OTP, `demoOtp` in the send-otp response)
+- `JWT_SECRET` — local placeholders are fine in development; required in production
+- `RESEND_API_KEY` — Railway backend only; used to email the OTP
+- `RESEND_FROM_EMAIL` — Railway backend only; Resend from address
+- `FRONTEND_ORIGIN` — allowed frontend origin(s)
 
 The backend uses Prisma with PostgreSQL. On Railway, the Postgres plugin provides `DATABASE_URL` automatically — do not hardcode a production URL.
 
