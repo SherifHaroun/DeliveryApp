@@ -61,7 +61,7 @@ export function createApp() {
         ok: true,
         service: "delivery-app",
         database: isMemoryDataMode() ? "memory" : "connected",
-        release: "2026-08-13",
+        release: "2026-08-15",
       });
     } catch {
       res.status(503).json({ ok: false, service: "delivery-app", database: "disconnected" });

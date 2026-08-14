@@ -39,7 +39,7 @@ export function getResendFrom() {
 export function assertProductionSecrets() {
   if (!isProductionRuntime()) return;
 
-  const missing = ["JWT_SECRET", "OTP_PEPPER", "RESEND_API_KEY"].filter((name) => !readEnv(name));
+  const missing = ["JWT_SECRET", "OTP_PEPPER"].filter((name) => !readEnv(name));
   if (missing.length) {
     throw new Error(`Missing required production environment variables: ${missing.join(", ")}`);
   }
