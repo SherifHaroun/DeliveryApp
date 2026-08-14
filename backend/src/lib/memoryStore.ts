@@ -98,7 +98,7 @@ export function seedMemoryStore() {
     {
       id: "mem-cust-1",
       fullName: "Nour Demo",
-      email: "nour.demo@example.com",
+      email: "sherief.mharoun@gmail.com",
       phone: "+20 100 000 1001",
       address: "12 Demo Street, Maadi",
       city: "Cairo",
@@ -106,7 +106,7 @@ export function seedMemoryStore() {
     {
       id: "mem-cust-2",
       fullName: "Omar Demo",
-      email: "omar.demo@example.com",
+      email: "sherief.mharoun@gmail.com",
       phone: "+20 100 000 1002",
       address: "44 Sample Road, Dokki",
       city: "Giza",
@@ -114,7 +114,7 @@ export function seedMemoryStore() {
     {
       id: "mem-cust-3",
       fullName: "Salma Demo",
-      email: "salma.demo@example.com",
+      email: "sherief.mharoun@gmail.com",
       phone: "+20 100 000 1003",
       address: "8 Test Lane, Zamalek",
       city: "Cairo",
@@ -122,7 +122,7 @@ export function seedMemoryStore() {
     {
       id: "mem-cust-4",
       fullName: "Youssef Demo",
-      email: "youssef.demo@example.com",
+      email: "sherief.mharoun@gmail.com",
       phone: "+20 100 000 1004",
       address: "21 Mock Avenue, Nasr City",
       city: "Cairo",
@@ -130,7 +130,7 @@ export function seedMemoryStore() {
     {
       id: "mem-cust-5",
       fullName: "Laila Demo",
-      email: "laila.demo@example.com",
+      email: "sherief.mharoun@gmail.com",
       phone: "+20 100 000 1005",
       address: "5 Example Close, Heliopolis",
       city: "Cairo",
@@ -138,7 +138,7 @@ export function seedMemoryStore() {
     {
       id: "mem-cust-6",
       fullName: "Hana Demo",
-      email: "hana.demo@example.com",
+      email: "sherief.mharoun@gmail.com",
       phone: "+20 100 000 1006",
       address: "19 Placeholder Blvd, 6th October",
       city: "Giza",

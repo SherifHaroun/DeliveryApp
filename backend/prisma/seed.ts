@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import QRCode from "qrcode";
 import { DEMO_COURIER_EMAIL, ensureDemoCourier } from "../src/lib/demoUser.ts";
+import { DEMO_CUSTOMERS } from "../src/lib/demoCards.ts";
 
 const prisma = new PrismaClient();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -44,78 +45,17 @@ async function main() {
   });
 
   const customers = await Promise.all(
-    [
-      {
-        fullName: "Nour El-Sayed",
-        email: "nour.elsayed@example.com",
-        phone: "+20 122 441 8801",
-        address: "14 Nile Corniche, Maadi",
-        city: "Cairo",
-      },
-      {
-        fullName: "Omar Farouk",
-        email: "omar.farouk@example.com",
-        phone: "+20 100 332 4410",
-        address: "88 Tahrir Street, Dokki",
-        city: "Giza",
-      },
-      {
-        fullName: "Salma Adel",
-        email: "salma.adel@example.com",
-        phone: "+20 111 220 3390",
-        address: "5 Mohamed Mazhar, Zamalek",
-        city: "Cairo",
-      },
-      {
-        fullName: "Youssef Kamal",
-        email: "youssef.kamal@example.com",
-        phone: "+20 128 774 2211",
-        address: "32 Fouad Street",
-        city: "Alexandria",
-      },
-      {
-        fullName: "Laila Mostafa",
-        email: "laila.mostafa@example.com",
-        phone: "+20 106 998 3344",
-        address: "9 Abbas El Akkad, Nasr City",
-        city: "Cairo",
-      },
-      {
-        fullName: "Hassan Ibrahim",
-        email: "hassan.ibrahim@example.com",
-        phone: "+20 155 667 8890",
-        address: "21 El Geish Road",
-        city: "Mansoura",
-      },
-      {
-        fullName: "Mona Sherif",
-        email: "mona.sherif@example.com",
-        phone: "+20 120 445 7788",
-        address: "4 El Horreya Avenue",
-        city: "Alexandria",
-      },
-      {
-        fullName: "Ahmed Nabil",
-        email: "ahmed.nabil@example.com",
-        phone: "+20 101 223 5566",
-        address: "17 Rehab City, Group 75",
-        city: "Cairo",
-      },
-      {
-        fullName: "Dina Magdy",
-        email: "dina.magdy@example.com",
-        phone: "+20 114 889 0012",
-        address: "6 October, El Motamayez",
-        city: "Giza",
-      },
-      {
-        fullName: "Tarek Fathy",
-        email: "tarek.fathy@example.com",
-        phone: "+20 127 334 6677",
-        address: "11 Port Said Street",
-        city: "Suez",
-      },
-    ].map((data) => prisma.customer.create({ data })),
+    DEMO_CUSTOMERS.map((person) =>
+      prisma.customer.create({
+        data: {
+          fullName: person.fullName,
+          email: "sherief.mharoun@gmail.com",
+          phone: person.phone,
+          address: person.address,
+          city: person.city,
+        },
+      }),
+    ),
   );
 
   const now = new Date();
