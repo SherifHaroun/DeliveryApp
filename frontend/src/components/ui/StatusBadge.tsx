@@ -6,7 +6,7 @@ export function StatusBadge({ status }: { status: string }) {
     status === "DELIVERED" ? "delivered" : status === "PENDING" ? "pending" : status === "OTP_SENT" ? "otp" : "custody";
 
   return (
-    <span className={`${styles.badge} ${styles[tone]}`}>
+    <span className={`${styles.badge} ${styles[tone] ?? styles.custody}`}>
       {statusLabel(status)}
       {status === "DELIVERED" ? " ✓" : ""}
     </span>

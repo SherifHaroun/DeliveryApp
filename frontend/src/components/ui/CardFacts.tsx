@@ -3,16 +3,19 @@ import { StatusBadge } from "./StatusBadge";
 import styles from "./CardFacts.module.css";
 
 export function CardFacts({ card }: { card: DeliveryCard }) {
+  const identifier = card?.identifier?.trim() || card?.qrToken?.trim() || "—";
+  const status = card?.status || "IN_CUSTODY";
+
   return (
     <dl className={styles.facts}>
       <div>
-        <dt>Card</dt>
-        <dd>{card.identifier}</dd>
+        <dt>Card ID</dt>
+        <dd>{identifier}</dd>
       </div>
       <div>
         <dt>Status</dt>
         <dd>
-          <StatusBadge status={card.status} />
+          <StatusBadge status={status} />
         </dd>
       </div>
     </dl>
