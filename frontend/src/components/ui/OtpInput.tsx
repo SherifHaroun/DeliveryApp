@@ -44,6 +44,7 @@ export function OtpInput({
             onChange(event.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6));
           }}
           aria-label={`Digit ${index + 1}`}
+          size={1}
         />
       ))}
     </div>

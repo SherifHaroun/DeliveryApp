@@ -163,6 +163,10 @@ img {
   padding: 12px 14px;
   border-radius: 14px;
   font-size: 14px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .banner-error {

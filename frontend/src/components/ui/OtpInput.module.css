@@ -1,11 +1,18 @@
 .row {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  display: flex;
   gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .box {
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
   height: 54px;
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--card);
@@ -13,9 +20,22 @@
   font-size: 22px;
   font-weight: 700;
   color: var(--text);
+  box-sizing: border-box;
 }
 
 .box:focus {
   outline: 2px solid color-mix(in srgb, var(--primary) 30%, transparent);
   border-color: var(--primary);
+}
+
+@media (max-width: 374px) {
+  .row {
+    gap: 6px;
+  }
+
+  .box {
+    font-size: 18px;
+    height: 48px;
+    border-radius: 12px;
+  }
 }

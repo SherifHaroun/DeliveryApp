@@ -128,7 +128,7 @@ export function DeliveryDetailPage() {
   }
 
   return (
-    <div>
+    <div className={styles.page}>
       <PageHeader
         title={card.status === "OTP_SENT" ? "OTP Verification" : "Card In Your Custody"}
         backTo="/deliveries"
