@@ -150,7 +150,11 @@ export async function sendOtp(cardId: string, courierId: string) {
       });
     });
     console.error("Failed to send OTP email:", error instanceof Error ? error.message : "unknown error");
-    throw new HttpError(502, "Unable to send OTP. Please try again.");
+    const detail = error instanceof Error ? error.message : "";
+    if (/RESEND_API_KEY is missing/i.test(detail)) {
+      throw new HttpError(502, "OTP email is not configured. Add RESEND_API_KEY on Railway and redeploy.");
+    }
+    throw new HttpError(502, "Unable to send the OTP email. Check RESEND_API_KEY and RESEND_FROM_EMAIL on Railway.");
   }
 
   await prisma.activity.create({

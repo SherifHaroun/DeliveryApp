@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { isResendConfigured, RESEND_API_KEY, RESEND_FROM_EMAIL } from "../../config/resend.js";
+import { getLiveResendApiKey, getLiveResendFromEmail, isResendConfigured } from "../../config/resend.js";
 import type { NotificationResult, OtpMessage } from "./types.js";
 
 function emailBody(code: string) {
@@ -30,23 +30,34 @@ function emailHtml(code: string) {
   `;
 }
 
+function resendErrorMessage(error: unknown) {
+  if (!error || typeof error !== "object") return "unknown error";
+  const record = error as { message?: unknown; name?: unknown };
+  const message = typeof record.message === "string" ? record.message : "";
+  const name = typeof record.name === "string" ? record.name : "";
+  return [name, message].filter(Boolean).join(": ") || JSON.stringify(error);
+}
+
 export async function sendOtpEmail(message: OtpMessage): Promise<NotificationResult> {
   if (!isResendConfigured()) {
-    throw new Error("Resend is not configured.");
+    console.error("OTP email failed: RESEND_API_KEY is missing on the backend.");
+    throw new Error("RESEND_API_KEY is missing on Railway.");
   }
 
-  const resend = new Resend(RESEND_API_KEY);
+  const apiKey = getLiveResendApiKey();
+  const from = getLiveResendFromEmail();
+  const resend = new Resend(apiKey);
   const { error } = await resend.emails.send({
-    from: RESEND_FROM_EMAIL,
-    to: message.to,
+    from,
+    to: [message.to],
     subject: "Your Card Delivery Verification Code",
     text: emailBody(message.code),
     html: emailHtml(message.code),
   });
 
   if (error) {
-    console.error("Failed to send OTP email:", error.message ?? "unknown error");
-    throw new Error("Could not send OTP email.");
+    console.error("Failed to send OTP email:", resendErrorMessage(error));
+    throw new Error(resendErrorMessage(error));
   }
 
   return { channel: "EMAIL", sent: true };

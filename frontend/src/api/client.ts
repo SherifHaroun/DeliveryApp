@@ -101,7 +101,10 @@ function friendlyError(path: string, status: number, message: string) {
     return "Your session has expired. Please sign in again.";
   }
   if (path.includes("send-otp") && status >= 500) {
-    return "Something went wrong while sending the OTP.";
+    if (/resend|email|configured|unable to send/i.test(message)) {
+      return message;
+    }
+    return "Unable to send the OTP email. Check RESEND_API_KEY on Railway.";
   }
   if (path.includes("verify-otp") && /invalid|expired|used|attempt|6-digit/i.test(message)) {
     return message;

@@ -20,11 +20,12 @@ export function getJwtSecret() {
 }
 
 export function getResendApiKey() {
-  return readEnv("RESEND_API_KEY");
+  return readEnv("RESEND_API_KEY").replace(/^["']|["']$/g, "");
 }
 
 export function getResendFromEmail() {
-  return readEnv("RESEND_FROM_EMAIL") || "onboarding@resend.dev";
+  const value = readEnv("RESEND_FROM_EMAIL").replace(/^["']|["']$/g, "");
+  return value || "Card Delivery Team <onboarding@resend.dev>";
 }
 
 export function assertProductionSecrets() {

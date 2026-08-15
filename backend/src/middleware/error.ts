@@ -9,8 +9,11 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     console.error(err);
   }
 
+  const clientMessage =
+    err instanceof HttpError ? err.message : status >= 500 ? "Something went wrong" : message;
+
   res.status(status).json({
-    error: status >= 500 ? "Something went wrong" : message,
+    error: clientMessage,
     ...(err instanceof HttpError && err.details ? err.details : {}),
   });
 }
