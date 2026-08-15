@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, ApiError } from "../api/client";
 import type { DeliveryCard as DeliveryCardType } from "../api/types";
@@ -23,32 +23,48 @@ export function DeliveryDetailPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [tick, setTick] = useState(0);
+  const loadGeneration = useRef(0);
+  const sendLock = useRef(false);
 
   const load = useCallback(async () => {
     if (!id) return;
-    const data = await api<DeliveryCardType>(`/api/deliveries/${id}`);
-    setCard(data);
+    const generation = ++loadGeneration.current;
+    try {
+      const data = await api<DeliveryCardType>(`/api/deliveries/${id}`);
+      if (generation !== loadGeneration.current) return;
+      setCard(data);
+    } catch (err) {
+      if (generation !== loadGeneration.current) return;
+      setError(err instanceof Error ? err.message : "Unable to load delivery.");
+    }
   }, [id]);
 
   useEffect(() => {
-    load().catch((err: Error) => setError(err.message));
+    void load();
   }, [load]);
 
   async function sendOtp() {
-    if (!id) return;
+    if (!id || sendLock.current || busy) return;
+    sendLock.current = true;
     setBusy(true);
     setError(null);
     setMessage(null);
     try {
-      const result = await api<{ card: DeliveryCardType }>(`/api/deliveries/${id}/send-otp`, {
+      const result = await api<unknown>(`/api/deliveries/${id}/send-otp`, {
         method: "POST",
       });
-      setCard(result.card);
+      const updated = deliveryFromSendOtpResponse(result);
+      if (!updated) {
+        throw new Error("OTP was sent, but the delivery could not be updated. Refresh and try again.");
+      }
+      loadGeneration.current += 1;
+      setCard(updated);
       setCode("");
       setMessage("OTP sent successfully. A verification code has been sent to the customer's email.");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong while sending the OTP.");
+      setError(err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Something went wrong while sending the OTP.");
     } finally {
+      sendLock.current = false;
       setBusy(false);
     }
   }
@@ -138,8 +154,8 @@ export function DeliveryDetailPage() {
         <section className={styles.panel}>
           <CardFacts card={card} />
           {error ? <p className="banner-error">{error}</p> : null}
-          <Button block loading={busy} onClick={() => void sendOtp()}>
-            {busy ? "Sending..." : "Send OTP"}
+          <Button type="button" block loading={busy} disabled={busy} onClick={() => void sendOtp()}>
+            {busy ? "Sending OTP..." : "Send OTP"}
           </Button>
         </section>
       ) : null}
@@ -188,7 +204,7 @@ export function DeliveryDetailPage() {
               {busy ? "Verifying..." : "Verify OTP"}
             </Button>
           </form>
-          <Button variant="ghost" block disabled={busy || !canResend} onClick={() => void sendOtp()}>
+          <Button type="button" variant="ghost" block disabled={busy || !canResend} onClick={() => void sendOtp()}>
             {!canResend && otp ? (
               <>
                 Resend OTP in{" "}
@@ -198,6 +214,8 @@ export function DeliveryDetailPage() {
                   onExpire={() => setTick((value) => value + 1)}
                 />
               </>
+            ) : busy ? (
+              "Sending OTP..."
             ) : (
               "Resend OTP"
             )}
@@ -207,4 +225,14 @@ export function DeliveryDetailPage() {
       ) : null}
     </div>
   );
+}
+
+function deliveryFromSendOtpResponse(data: unknown): DeliveryCardType | null {
+  if (!data || typeof data !== "object") return null;
+  const value = data as { card?: unknown; id?: unknown; status?: unknown };
+  const candidate = value.card && typeof value.card === "object" ? value.card : value;
+  if (!candidate || typeof candidate !== "object") return null;
+  const card = candidate as Partial<DeliveryCardType>;
+  if (typeof card.id !== "string" || typeof card.status !== "string") return null;
+  return card as DeliveryCardType;
 }

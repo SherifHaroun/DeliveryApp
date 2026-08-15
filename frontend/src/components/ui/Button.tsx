@@ -15,6 +15,7 @@ export function Button({
   className,
   children,
   disabled,
+  type = "button",
   ...props
 }: Props) {
   const classes = [
@@ -25,7 +26,7 @@ export function Button({
   ].join(" ");
 
   return (
-    <button className={classes} disabled={disabled || loading} {...props}>
+    <button type={type} className={classes} {...props} disabled={disabled || loading}>
       {loading ? <span className={styles.spinner} aria-hidden="true" /> : null}
       {children}
     </button>
