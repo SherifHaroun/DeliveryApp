@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { CheckCircle2, Package } from "lucide-react";
 import { api } from "../api/client";
 import type { DashboardData } from "../api/types";
@@ -22,7 +23,7 @@ export function DashboardPage() {
       .catch((err: Error) => setError(err.message));
   }, []);
 
-  const recent = data?.recentActivity ?? [];
+  const recent = uniqueLatestByCardId(data?.recentActivity ?? []);
 
   return (
     <div>
@@ -58,16 +59,6 @@ export function DashboardPage() {
         )}
       </section>
 
-      <section className={styles.hero}>
-        <div>
-          <h2>Ready to Deliver</h2>
-          <p>Scan a card to begin the delivery process.</p>
-        </div>
-        <span className={styles.heroIcon}>
-          <Package size={28} />
-        </span>
-      </section>
-
       {error ? <p className="banner-error">{error}</p> : null}
 
       <section className={styles.recent}>
@@ -86,14 +77,16 @@ export function DashboardPage() {
         ) : (
           <ul className={styles.list}>
             {recent.slice(0, 6).map((item) => (
-              <li key={item.id} className={styles.row}>
-                <div>
-                  <strong>{item.identifier ?? maskedCard(item.last4)}</strong>
-                  <span>
-                    {dayHeading(item.createdAt)}, {formatTime(item.createdAt)}
-                  </span>
-                </div>
-                <StatusBadge status={item.status} />
+              <li key={item.cardId}>
+                <Link to={`/deliveries/${item.cardId}`} className={styles.row}>
+                  <div>
+                    <strong>{item.identifier ?? maskedCard(item.last4)}</strong>
+                    <span>
+                      {dayHeading(item.createdAt)}, {formatTime(item.createdAt)}
+                    </span>
+                  </div>
+                  <StatusBadge status={item.status} />
+                </Link>
               </li>
             ))}
           </ul>
@@ -106,4 +99,14 @@ export function DashboardPage() {
       </section>
     </div>
   );
+}
+
+function uniqueLatestByCardId(items: DashboardData["recentActivity"]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = item.cardId || item.identifier;
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }

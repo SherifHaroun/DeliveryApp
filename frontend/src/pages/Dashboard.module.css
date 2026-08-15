@@ -26,42 +26,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-bottom: 16px;
-}
-
-.hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  background: var(--card);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: 20px 18px;
   margin-bottom: 28px;
-}
-
-.hero h2 {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.hero p {
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.heroIcon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background: var(--primary-soft);
-  color: var(--primary);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
 }
 
 .recent h2 {
@@ -92,6 +57,13 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
   padding: 14px 16px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.row:hover {
+  box-shadow: var(--shadow);
 }
 
 .row strong {

@@ -4,7 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import { prisma } from "./lib/prisma.js";
 import { isMemoryDataMode } from "./config/dataMode.js";
-import { isResendConfigured } from "./config/resend.js";
+import { isResendApiKeyLooksValid, isResendConfigured } from "./config/resend.js";
 import { authRouter } from "./routes/auth.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { deliveriesRouter } from "./routes/deliveries.js";
@@ -62,8 +62,9 @@ export function createApp() {
         ok: true,
         service: "delivery-app",
         database: isMemoryDataMode() ? "memory" : "connected",
-        release: "2026-08-15-otp-from",
+        release: "2026-08-15-otp-key",
         resendConfigured: isResendConfigured(),
+        resendKeyLooksValid: isResendApiKeyLooksValid(),
       });
     } catch {
       res.status(503).json({ ok: false, service: "delivery-app", database: "disconnected" });

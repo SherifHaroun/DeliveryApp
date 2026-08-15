@@ -154,6 +154,12 @@ export async function sendOtp(cardId: string, courierId: string) {
     if (/RESEND_API_KEY is missing/i.test(detail)) {
       throw new HttpError(502, "OTP email is not configured. Add RESEND_API_KEY on Railway and redeploy.");
     }
+    if (/api key is invalid|invalid api key|unauthorized/i.test(detail)) {
+      throw new HttpError(
+        502,
+        "Resend rejected RESEND_API_KEY. Create a new API key at resend.com/api-keys, replace it on the Railway backend service (no quotes), and redeploy.",
+      );
+    }
     if (/from|domain|verify|testing emails|own email/i.test(detail)) {
       throw new HttpError(
         502,

@@ -58,6 +58,7 @@ export type DashboardData = {
   inCustody: number;
   recentActivity: {
     id: string;
+    cardId: string;
     action: string;
     summary: string;
     message: string;

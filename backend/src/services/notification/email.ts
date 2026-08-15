@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { isResendApiKeyFormatValid } from "../../config/env.js";
 import { getLiveResendApiKey, getLiveResendFromEmail, isResendConfigured } from "../../config/resend.js";
 import type { NotificationResult, OtpMessage } from "./types.js";
 
@@ -45,6 +46,10 @@ export async function sendOtpEmail(message: OtpMessage): Promise<NotificationRes
   }
 
   const apiKey = getLiveResendApiKey();
+  if (!isResendApiKeyFormatValid(apiKey)) {
+    console.error("OTP email failed: RESEND_API_KEY is not a valid Resend key (should start with re_).");
+    throw new Error("API key is invalid");
+  }
   const from = getLiveResendFromEmail();
   const to = String(message.to ?? "").trim();
   console.info(`Sending OTP email from=${from} to=${to.replace(/^[^@]+/, "***")}`);
