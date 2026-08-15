@@ -8,7 +8,6 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { Skeleton } from "../components/ui/Skeleton";
 import { StatCard } from "../components/ui/StatCard";
 import { StatusBadge } from "../components/ui/StatusBadge";
-import { HowItWorks } from "../components/ui/WorkflowSteps";
 import { dayHeading, firstName, formatTime, greeting, maskedCard } from "../lib/format";
 import styles from "./Dashboard.module.css";
 
@@ -43,12 +42,14 @@ export function DashboardPage() {
               value={data.toBeDelivered}
               icon={<Package size={18} />}
               tone="blue"
+              to="/deliveries"
             />
             <StatCard
               label="Delivered Cards"
               value={data.delivered}
               icon={<CheckCircle2 size={18} />}
               tone="green"
+              to="/deliveries?status=DELIVERED"
             />
           </>
         ) : (
@@ -91,11 +92,6 @@ export function DashboardPage() {
             ))}
           </ul>
         )}
-      </section>
-
-      <section className={styles.how} aria-label="How it works">
-        <h2>How It Works</h2>
-        <HowItWorks />
       </section>
     </div>
   );

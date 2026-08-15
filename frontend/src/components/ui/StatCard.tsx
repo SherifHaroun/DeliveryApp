@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
 import styles from "./StatCard.module.css";
 
@@ -6,17 +7,30 @@ export function StatCard({
   value,
   icon,
   tone = "blue",
+  to,
 }: {
   label: string;
   value: number;
   icon: ReactNode;
   tone?: "blue" | "green" | "navy";
+  to?: string;
 }) {
-  return (
-    <article className={`${styles.card} ${styles[tone]}`}>
+  const className = `${styles.card} ${styles[tone]}${to ? ` ${styles.clickable}` : ""}`;
+  const content = (
+    <>
       <div className={styles.icon}>{icon}</div>
       <p className={styles.value}>{value}</p>
       <p className={styles.label}>{label}</p>
-    </article>
+    </>
   );
+
+  if (to) {
+    return (
+      <Link to={to} className={className}>
+        {content}
+      </Link>
+    );
+  }
+
+  return <article className={className}>{content}</article>;
 }

@@ -45,7 +45,7 @@ describe("DashboardPage", () => {
     });
   });
 
-  it("renders dashboard stats, recent activity, and how it works", async () => {
+  it("renders dashboard stats and recent activity", async () => {
     render(
       <MemoryRouter>
         <DashboardPage />
@@ -56,13 +56,15 @@ describe("DashboardPage", () => {
     expect(screen.getByText("18")).toBeInTheDocument();
     expect(screen.getByText("Delivered Cards")).toBeInTheDocument();
     expect(screen.getByText("32")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Cards To Be Delivered/i })).toHaveAttribute("href", "/deliveries");
+    expect(screen.getByRole("link", { name: /Delivered Cards/i })).toHaveAttribute("href", "/deliveries?status=DELIVERED");
     expect(screen.getByText("Recent Activity")).toBeInTheDocument();
     expect(screen.getByText("C00001")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /C00001/i })).toHaveAttribute("href", "/deliveries/card-1");
     expect(screen.queryByText("Ready to Deliver")).not.toBeInTheDocument();
     expect(screen.queryByText("Scan a card to begin the delivery process.")).not.toBeInTheDocument();
-    expect(screen.getByText("How It Works")).toBeInTheDocument();
-    expect(screen.getByText(/Scan the QR code attached to the card/i)).toBeInTheDocument();
+    expect(screen.queryByText("How It Works")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Scan the QR code attached to the card/i)).not.toBeInTheDocument();
     await waitFor(() => expect(apiMock).toHaveBeenCalledWith("/api/dashboard"));
   });
 

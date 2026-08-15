@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Package, Search } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import type { DeliveryCard as DeliveryCardType } from "../api/types";
 import { Button } from "../components/ui/Button";
@@ -16,12 +17,22 @@ const filters = [
 ];
 
 export function DeliveriesPage() {
-  const [filter, setFilter] = useState(filters[0]);
+  const [searchParams] = useSearchParams();
+  const statusFromUrl = searchParams.get("status") ?? "";
+  const initialFilter = useMemo(
+    () => filters.find((item) => item.status === statusFromUrl) ?? filters[0],
+    [statusFromUrl],
+  );
+  const [filter, setFilter] = useState(initialFilter);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [cards, setCards] = useState<DeliveryCardType[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
+
+  useEffect(() => {
+    setFilter(initialFilter);
+  }, [initialFilter]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedQuery(query.trim()), 300);

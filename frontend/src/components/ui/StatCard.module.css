@@ -6,6 +6,17 @@
   min-height: 128px;
 }
 
+.clickable {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.clickable:hover {
+  box-shadow: var(--shadow);
+}
+
 .icon {
   width: 40px;
   height: 40px;
