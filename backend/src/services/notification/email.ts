@@ -47,8 +47,8 @@ export async function sendOtpEmail(message: OtpMessage): Promise<NotificationRes
 
   const apiKey = getLiveResendApiKey();
   if (!isResendApiKeyFormatValid(apiKey)) {
-    console.error("OTP email failed: RESEND_API_KEY is not a valid Resend key (should start with re_).");
-    throw new Error("API key is invalid");
+    console.error("OTP email failed: RESEND_API_KEY on Railway does not start with re_.");
+    throw new Error("RESEND_API_KEY_FORMAT");
   }
   const from = getLiveResendFromEmail();
   const to = String(message.to ?? "").trim();

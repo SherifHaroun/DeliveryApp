@@ -154,6 +154,12 @@ export async function sendOtp(cardId: string, courierId: string) {
     if (/RESEND_API_KEY is missing/i.test(detail)) {
       throw new HttpError(502, "OTP email is not configured. Add RESEND_API_KEY on Railway and redeploy.");
     }
+    if (/RESEND_API_KEY_FORMAT/i.test(detail)) {
+      throw new HttpError(
+        502,
+        "RESEND_API_KEY on Railway is not a Resend key. Paste the full secret that starts with re_ on the Railway backend (not Vercel), with no quotes, then redeploy.",
+      );
+    }
     if (/api key is invalid|invalid api key|unauthorized/i.test(detail)) {
       throw new HttpError(
         502,

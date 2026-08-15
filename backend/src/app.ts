@@ -62,7 +62,7 @@ export function createApp() {
         ok: true,
         service: "delivery-app",
         database: isMemoryDataMode() ? "memory" : "connected",
-        release: "2026-08-15-otp-key",
+        release: "2026-08-15-otp-key-format",
         resendConfigured: isResendConfigured(),
         resendKeyLooksValid: isResendApiKeyLooksValid(),
       });

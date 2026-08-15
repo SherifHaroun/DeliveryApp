@@ -22,12 +22,14 @@ export function getJwtSecret() {
 export function getResendApiKey() {
   return readEnv("RESEND_API_KEY")
     .replace(/^\uFEFF/, "")
+    .replace(/^["'`“”‘’]+|["'`“”‘’]+$/g, "")
+    .replace(/^Bearer\s+/i, "")
     .replace(/[\s\u200B\u200C\u200D\uFEFF]/g, "")
-    .replace(/^["']+|["']+$/g, "");
+    .replace(/^["'`“”‘’]+|["'`“”‘’]+$/g, "");
 }
 
 export function isResendApiKeyFormatValid(value = getResendApiKey()) {
-  return /^re_[A-Za-z0-9]+$/.test(value);
+  return value.startsWith("re_") && value.length >= 10;
 }
 
 const PUBLIC_MAIL_DOMAINS = new Set([
