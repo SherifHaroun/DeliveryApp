@@ -154,7 +154,16 @@ export async function sendOtp(cardId: string, courierId: string) {
     if (/RESEND_API_KEY is missing/i.test(detail)) {
       throw new HttpError(502, "OTP email is not configured. Add RESEND_API_KEY on Railway and redeploy.");
     }
-    throw new HttpError(502, "Unable to send the OTP email. Check RESEND_API_KEY and RESEND_FROM_EMAIL on Railway.");
+    if (/from|domain|verify|testing emails|own email/i.test(detail)) {
+      throw new HttpError(
+        502,
+        "Resend rejected the sender address. Set RESEND_FROM_EMAIL to onboarding@resend.dev. Your Gmail is the recipient, not the From address.",
+      );
+    }
+    if (detail && detail.length < 280 && !/re_[A-Za-z0-9]/i.test(detail)) {
+      throw new HttpError(502, `Unable to send the OTP email. ${detail}`);
+    }
+    throw new HttpError(502, "Unable to send the OTP email. Check Railway logs for the Resend error.");
   }
 
   await prisma.activity.create({
@@ -219,7 +228,7 @@ export async function verifyOtp(cardId: string, courierId: string, rawCode: stri
         where: { id: otp.id },
         data: {
           attempts,
-          invalidatedAt: locked ? new Date() : otp.invalidatedAt,
+          invalidatedAt: otp.invalidatedAt,
         },
       });
       await tx.activity.create({
@@ -230,6 +239,9 @@ export async function verifyOtp(cardId: string, courierId: string, rawCode: stri
           message: `OTP verification failed for ${card.identifier}`,
         },
       });
+      if (locked) {
+        return { type: "locked" as const };
+      }
       return { type: "wrong" as const, attempts };
     }
 

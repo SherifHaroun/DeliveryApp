@@ -46,10 +46,12 @@ export async function sendOtpEmail(message: OtpMessage): Promise<NotificationRes
 
   const apiKey = getLiveResendApiKey();
   const from = getLiveResendFromEmail();
+  const to = String(message.to ?? "").trim();
+  console.info(`Sending OTP email from=${from} to=${to.replace(/^[^@]+/, "***")}`);
   const resend = new Resend(apiKey);
-  const { error } = await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from,
-    to: [message.to],
+    to,
     subject: "Your Card Delivery Verification Code",
     text: emailBody(message.code),
     html: emailHtml(message.code),
@@ -60,5 +62,6 @@ export async function sendOtpEmail(message: OtpMessage): Promise<NotificationRes
     throw new Error(resendErrorMessage(error));
   }
 
+  console.info("OTP email accepted by Resend:", data?.id ?? "no-id");
   return { channel: "EMAIL", sent: true };
 }

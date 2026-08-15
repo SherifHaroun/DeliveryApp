@@ -23,9 +23,33 @@ export function getResendApiKey() {
   return readEnv("RESEND_API_KEY").replace(/^["']|["']$/g, "");
 }
 
+const PUBLIC_MAIL_DOMAINS = new Set([
+  "gmail.com",
+  "googlemail.com",
+  "yahoo.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "icloud.com",
+  "me.com",
+  "aol.com",
+  "proton.me",
+  "protonmail.com",
+]);
+
+function emailDomain(value: string) {
+  const match = value.match(/<([^>]+)>/) ?? [null, value];
+  const address = String(match[1] ?? "").trim().toLowerCase();
+  return address.split("@")[1] ?? "";
+}
+
 export function getResendFromEmail() {
   const value = readEnv("RESEND_FROM_EMAIL").replace(/^["']|["']$/g, "");
-  return value || "Card Delivery Team <onboarding@resend.dev>";
+  const domain = emailDomain(value);
+  if (!value || PUBLIC_MAIL_DOMAINS.has(domain)) {
+    return "Card Delivery Team <onboarding@resend.dev>";
+  }
+  return value;
 }
 
 export function assertProductionSecrets() {

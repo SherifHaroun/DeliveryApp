@@ -62,7 +62,7 @@ export function createApp() {
         ok: true,
         service: "delivery-app",
         database: isMemoryDataMode() ? "memory" : "connected",
-        release: "2026-08-15-otp-resend",
+        release: "2026-08-15-otp-from",
         resendConfigured: isResendConfigured(),
       });
     } catch {
