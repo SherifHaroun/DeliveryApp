@@ -1,7 +1,7 @@
 import { prisma } from "./prisma.js";
 
 /** Demo label identifiers used to seed test cards. Scanner logic does not whitelist these. */
-const DEMO_LABELS = Array.from({ length: 10 }, (_, index) => {
+const DEMO_LABELS = Array.from({ length: 30 }, (_, index) => {
   const number = String(index + 1).padStart(5, "0");
   return `C${number}`;
 });
@@ -65,7 +65,7 @@ export async function ensureDemoLabelCards() {
   const customers = await demoCustomers();
 
   for (const [index, identifier] of DEMO_LABELS.entries()) {
-    const customer = customers[index];
+    const customer = customers[index % customers.length];
     const last4 = identifier.slice(-4);
     const existing = await prisma.card.findUnique({ where: { identifier } });
 

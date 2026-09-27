@@ -135,3 +135,9 @@ Couriers can cancel an active delivery by entering a reason and allowing a fresh
 The courier dashboard includes **Cancelled Cards**, linking to the cancelled deliveries filter. Each record shows the reason, courier, timestamps, location accuracy and a map link. Reporting follows the existing signed-in courier scope. Device-reported location is evidence for review, not independently verified proof of presence. Customer records currently contain addresses rather than GPS coordinates, so automatic distance comparison is not available.
 
 The additive database migration adds a nullable cancellation JSON record to Card. The existing production start command applies it before starting the backend. Deploy the updated backend before the frontend. These changes do not require new email configuration.
+
+## Additional printed test labels
+
+The verified PDF label batch C00011-C00030 is included in the startup test-card setup and in fresh development seeds. The 20 QR payloads are the plain card identifiers. New cards start as PENDING and cycle through the same ten demo customers and OTP recipient used by C00001-C00010.
+
+To add only this batch to an existing database, run npm run import:test-labels -w backend with DATABASE_URL set to the intended DeliveryApp database. The importer creates missing cards in one transaction, reuses the customers from the original ten cards, preserves existing cards and delivery history, and prints the verified identifiers and statuses. Re-running it does not reset cards. Do not use the destructive db:seed command to import into an existing database.

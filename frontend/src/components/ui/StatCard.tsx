@@ -8,14 +8,16 @@ export function StatCard({
   icon,
   tone = "blue",
   to,
+  compact = false,
 }: {
   label: string;
   value: number;
   icon: ReactNode;
-  tone?: "blue" | "green" | "navy";
+  tone?: "blue" | "green" | "navy" | "red";
   to?: string;
+  compact?: boolean;
 }) {
-  const className = `${styles.card} ${styles[tone]}${to ? ` ${styles.clickable}` : ""}`;
+  const className = `${styles.card} ${styles[tone]}${to ? ` ${styles.clickable}` : ""}${compact ? ` ${styles.compact}` : ""}`;
   const content = (
     <>
       <div className={styles.icon}>{icon}</div>

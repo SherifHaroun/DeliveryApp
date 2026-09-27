@@ -72,6 +72,10 @@ async function main() {
     { identifier: "C00008", last4: "0008", type: "Debit", status: "PENDING", token: "C00008", customer: 7 },
     { identifier: "C00009", last4: "0009", type: "Debit", status: "PENDING", token: "C00009", customer: 8 },
     { identifier: "C00010", last4: "0010", type: "Debit", status: "PENDING", token: "C00010", customer: 9 },
+    ...Array.from({ length: 20 }, (_, index) => {
+      const identifier = `C${String(index + 11).padStart(5, "0")}`;
+      return { identifier, last4: identifier.slice(-4), type: "Debit", status: "PENDING", token: identifier, customer: index % customers.length };
+    }),
     { identifier: "CARD-1005", last4: "1108", type: "Debit", status: "IN_CUSTODY", token: "CIBDEL-E6S7Y3", customer: 4, scannedHours: 2 },
     { identifier: "CARD-1006", last4: "5566", type: "Credit", status: "IN_CUSTODY", token: "CIBDEL-F2U8Z4", customer: 5, scannedHours: 5 },
     { identifier: "CARD-1007", last4: "9023", type: "Debit", status: "OTP_SENT", token: "CIBDEL-G4V1X8", customer: 6, scannedHours: 6, otpHours: 1 },

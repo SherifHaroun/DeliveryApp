@@ -5,6 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
+    "import:test-labels": "node scripts/import-test-labels.mjs",
     "dev": "tsx watch --exclude ../node_modules src/index.ts",
     "build": "prisma generate && tsc",
     "start": "prisma migrate deploy && node dist/index.js",

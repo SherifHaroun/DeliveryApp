@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Package } from "lucide-react";
+import { CheckCircle2, CircleX, Package } from "lucide-react";
 import { api } from "../api/client";
 import type { DashboardData } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
@@ -51,7 +51,7 @@ export function DashboardPage() {
               tone="green"
               to="/deliveries?status=DELIVERED"
             />
-            <StatCard label="Cancelled Cards" value={data.cancelled ?? 0} icon={<Package size={18} />} tone="navy" to="/deliveries?status=CANCELLED" />
+            <StatCard label="Cancelled Cards" value={data.cancelled ?? 0} icon={<CircleX size={20} />} tone="red" compact to="/deliveries?status=CANCELLED" />
           </>
         ) : (
           <>

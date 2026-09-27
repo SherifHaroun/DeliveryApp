@@ -10,23 +10,23 @@
 }
 
 .pending {
-  background: #eef2f6;
+  background: var(--neutral-soft);
   color: var(--muted);
 }
 
 .custody,
 .otp {
   background: var(--primary-soft);
-  color: var(--primary);
+  color: var(--primary-text);
 }
 
 .delivered {
   background: var(--success-soft);
-  color: var(--success);
+  color: var(--success-text);
 }
 
 html[data-theme="dark"] .pending {
   background: #243044;
 }
 
-.cancelled { color: #9f1239; background: #ffe4e6; }
+.cancelled { color: var(--danger-text); background: var(--danger-soft); }
