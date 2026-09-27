@@ -55,6 +55,7 @@ export function ScanPage() {
     if (!qrToken || handlingRef.current) return;
 
     handlingRef.current = true;
+    playScanFeedback(prefs);
     try {
       await stopScanner();
       setPhase("checking");
@@ -70,7 +71,6 @@ export function ScanPage() {
         setPhase("error");
         return;
       }
-      playScanFeedback(prefs);
       setAlreadyScanned(parsed.alreadyInCustody);
       setCard(display);
       setPhase("found");

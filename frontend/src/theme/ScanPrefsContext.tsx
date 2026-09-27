@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 type ScanPrefs = {
   sound: boolean;
@@ -7,6 +7,22 @@ type ScanPrefs = {
 
 const KEY = "delivery_scan_prefs";
 const defaults: ScanPrefs = { sound: true, vibration: true };
+
+let audioContext: AudioContext | undefined;
+let scanSound: Promise<AudioBuffer> | undefined;
+
+function prepareScanSound() {
+  audioContext ??= new AudioContext();
+  const context = audioContext;
+  scanSound ??= fetch(`${import.meta.env.BASE_URL}audio/qr-scan.mp3`)
+    .then(response => {
+      if (!response.ok) throw new Error("Scan sound unavailable");
+      return response.arrayBuffer();
+    })
+    .then(bytes => context.decodeAudioData(bytes))
+    .catch(error => { scanSound = undefined; throw error; });
+  return scanSound;
+}
 
 function readPrefs(): ScanPrefs {
   try {
@@ -26,6 +42,24 @@ const ScanPrefsContext = createContext<{
 
 export function ScanPrefsProvider({ children }: { children: ReactNode }) {
   const [prefs, setPrefsState] = useState<ScanPrefs>(readPrefs);
+
+  useEffect(() => {
+    if (!prefs.sound) return;
+    // Decode in advance and unlock playback on a tap for mobile browsers.
+    const unlock = () => {
+      try {
+        void prepareScanSound().catch(() => undefined);
+        void audioContext?.resume().catch(() => undefined);
+      } catch { /* Audio support is optional. */ }
+    };
+    try { void prepareScanSound().catch(() => undefined); } catch { /* Audio support is optional. */ }
+    window.addEventListener("pointerdown", unlock);
+    window.addEventListener("keydown", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, [prefs.sound]);
 
   const value = useMemo(
     () => ({
@@ -52,18 +86,21 @@ export function playScanFeedback(prefs: ScanPrefs) {
     if (prefs.vibration && "vibrate" in navigator) {
       navigator.vibrate(40);
     }
-    if (!prefs.sound) return;
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = 880;
-    gain.gain.value = 0.04;
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.12);
   } catch {
     // Feedback is optional; scanning should continue even if it fails.
+  }
+  if (!prefs.sound) return;
+  try {
+    const buffer = prepareScanSound();
+    const context = audioContext!;
+    void Promise.all([buffer, context.resume()]).then(([decoded]) => {
+      const source = context.createBufferSource();
+      source.buffer = decoded;
+      source.connect(context.destination);
+      source.onended = () => source.disconnect();
+      source.start();
+    }).catch(() => undefined);
+  } catch {
+    // An unavailable sound must never interrupt a scan.
   }
 }

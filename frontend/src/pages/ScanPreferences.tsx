@@ -43,7 +43,7 @@ export function ScanPreferencesPage() {
     <div>
       <PageHeader title="Scan Preferences" backTo="/profile" />
 
-      <SettingsGroup title="Scan Success">
+      <SettingsGroup title="Scan Feedback">
         <div className={styles.prefRow}>
           <span>Sound</span>
           <Toggle
