@@ -49,6 +49,7 @@ model Card {
   scannedAt   DateTime?
   otpSentAt   DateTime?
   deliveredAt DateTime?
+  cancellation Json?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

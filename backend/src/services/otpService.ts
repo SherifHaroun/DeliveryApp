@@ -108,11 +108,12 @@ export async function sendOtp(cardId: string, courierId: string) {
       },
     });
 
-    const updated = await tx.card.update({
-      where: { id: card.id },
+    const changed = await tx.card.updateMany({
+      where: { id: card.id, courierId, status: { in: [CARD_STATUSES.IN_CUSTODY, CARD_STATUSES.OTP_SENT] } },
       data: { status: CARD_STATUSES.OTP_SENT, otpSentAt: sentAt },
-      include: cardInclude,
     });
+    if (!changed.count) throw new HttpError(409, "Delivery is no longer active. Refresh this delivery.");
+    const updated = await tx.card.findUniqueOrThrow({ where: { id: card.id }, include: cardInclude });
 
     return { otp, card: updated };
   });
@@ -134,20 +135,19 @@ export async function sendOtp(cardId: string, courierId: string) {
         data: { invalidatedAt: new Date() },
       });
 
-      if (previousOtpId) {
-        await tx.otp.update({
-          where: { id: previousOtpId },
-          data: { invalidatedAt: null },
-        });
-      }
-
-      await tx.card.update({
-        where: { id: card.id },
+      const restored = await tx.card.updateMany({
+        where: { id: card.id, status: CARD_STATUSES.OTP_SENT, otpSentAt: sentAt },
         data: {
           status: previousStatus,
           otpSentAt: previousOtpSentAt,
         },
       });
+      if (restored.count && previousOtpId) {
+        await tx.otp.update({
+          where: { id: previousOtpId },
+          data: { invalidatedAt: null },
+        });
+      }
     });
     console.error("Failed to send OTP email:", error instanceof Error ? error.message : "unknown error");
     const detail = error instanceof Error ? error.message : "";

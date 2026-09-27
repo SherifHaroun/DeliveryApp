@@ -21,6 +21,7 @@ export function ScanPage() {
   const handlingRef = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>("scanning");
+  const [alreadyScanned, setAlreadyScanned] = useState(false);
   const [scanKey, setScanKey] = useState(0);
   const [card, setCard] = useState<ReturnType<typeof toDisplayCard>>(null);
   const [errorTitle, setErrorTitle] = useState("Unable to read this card");
@@ -70,6 +71,7 @@ export function ScanPage() {
         return;
       }
       playScanFeedback(prefs);
+      setAlreadyScanned(parsed.alreadyInCustody);
       setCard(display);
       setPhase("found");
     } catch (error) {
@@ -206,9 +208,10 @@ export function ScanPage() {
         {phase === "found" && card ? (
           <section className={styles.panel}>
             <SuccessMark />
-            <h2>Card Found ✓</h2>
+            <h2>{alreadyScanned ? "Already scanned" : "Card Found ✓"}</h2>
+            {alreadyScanned ? <p>This card is already in your custody. Do you want to continue to OTP verification?</p> : null}
             <CardFacts card={card} />
-            <Button block onClick={() => navigate(`/deliveries/${card.id}`)}>
+            <Button block onClick={() => navigate(`/deliveries/${card.id}${alreadyScanned ? "?otp=1" : ""}`)}>
               {card.status === "OTP_SENT" ? "Enter OTP" : "Send OTP"}
             </Button>
           </section>

@@ -5,6 +5,8 @@ import { HttpError, asyncHandler } from "../lib/http.js";
 import { CARD_STATUSES, serializeCard } from "../lib/serialize.js";
 import { getDeliveryForCourier, sendOtp, verifyOtp } from "../services/otpService.js";
 
+import { cancelDelivery } from "../services/cancellationService.js";
+
 const cardInclude = {
   customer: true,
   courier: true,
@@ -15,6 +17,7 @@ const ASSIGNED_STATUSES = [
   CARD_STATUSES.IN_CUSTODY,
   CARD_STATUSES.OTP_SENT,
   CARD_STATUSES.DELIVERED,
+  CARD_STATUSES.CANCELLED,
 ] as const;
 
 export const deliveriesRouter = Router();
@@ -98,6 +101,10 @@ deliveriesRouter.post(
     throw new HttpError(403, "Cards can only be marked delivered after OTP verification.");
   }),
 );
+
+deliveriesRouter.post("/:id/cancel", asyncHandler(async (req, res) => {
+  res.json(await cancelDelivery(req.params.id, req.user!.id, req.body));
+}));
 
 deliveriesRouter.patch(
   "/:id/status",

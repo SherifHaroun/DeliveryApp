@@ -11,6 +11,7 @@ import styles from "./ListPage.module.css";
 
 const filters = [
   { id: "all", label: "All", status: "" },
+  { id: "cancelled", label: "Cancelled", status: "CANCELLED" },
   { id: "custody", label: "Ready", status: "IN_CUSTODY" },
   { id: "otp", label: "OTP Sent", status: "OTP_SENT" },
   { id: "delivered", label: "Delivered", status: "DELIVERED" },

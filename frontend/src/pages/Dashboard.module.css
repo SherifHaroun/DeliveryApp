@@ -29,6 +29,8 @@
   margin-bottom: 28px;
 }
 
+.stats > :last-child:nth-child(3) { grid-column: 1 / -1; }
+
 .recent h2 {
   font-size: 16px;
   font-weight: 650;

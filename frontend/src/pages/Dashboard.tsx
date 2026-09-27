@@ -51,6 +51,7 @@ export function DashboardPage() {
               tone="green"
               to="/deliveries?status=DELIVERED"
             />
+            <StatCard label="Cancelled Cards" value={data.cancelled ?? 0} icon={<Package size={18} />} tone="navy" to="/deliveries?status=CANCELLED" />
           </>
         ) : (
           <>

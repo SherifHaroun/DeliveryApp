@@ -31,10 +31,11 @@ dashboardRouter.get(
   asyncHandler(async (req, res) => {
     const courierId = req.user!.id;
 
-    const [delivered, inCustody, otpSent, cards] = await Promise.all([
+    const [delivered, inCustody, otpSent, cancelled, cards] = await Promise.all([
       prisma.card.count({ where: { courierId, status: CARD_STATUSES.DELIVERED } }),
       prisma.card.count({ where: { courierId, status: CARD_STATUSES.IN_CUSTODY } }),
       prisma.card.count({ where: { courierId, status: CARD_STATUSES.OTP_SENT } }),
+      prisma.card.count({ where: { courierId, status: CARD_STATUSES.CANCELLED } }),
       prisma.card.findMany({
         where: { courierId, activities: { some: { courierId } } },
         include: {
@@ -54,6 +55,7 @@ dashboardRouter.get(
     res.json({
       toBeDelivered: myOpenCards,
       delivered,
+      cancelled,
       inCustody: myOpenCards,
       recentActivity: recentActivity.map((card) => {
         const item = card.activities[0]!;

@@ -1,4 +1,4 @@
-export type CardStatus = "PENDING" | "IN_CUSTODY" | "OTP_SENT" | "DELIVERED";
+export type CardStatus = "CANCELLED" | "PENDING" | "IN_CUSTODY" | "OTP_SENT" | "DELIVERED";
 
 export type Customer = {
   id: string;
@@ -42,6 +42,7 @@ export type DeliveryCard = {
   courier: { id: string; fullName: string; email: string } | null;
   lastAction?: LastAction | null;
   otp?: OtpSession | null;
+  cancellation?: { reason: string; latitude: number; longitude: number; accuracy: number; capturedAt: string; cancelledAt: string; courierId: string; courierName: string; customerAddress: string; customerCity: string | null } | null;
 };
 
 export type AuthUser = {
@@ -53,6 +54,7 @@ export type AuthUser = {
 };
 
 export type DashboardData = {
+  cancelled?: number;
   toBeDelivered: number;
   delivered: number;
   inCustody: number;

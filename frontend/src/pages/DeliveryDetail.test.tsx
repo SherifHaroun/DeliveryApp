@@ -196,3 +196,23 @@ describe("DeliveryDetailPage send OTP", () => {
     expect(postCount).toBe(1);
   });
 });
+
+
+describe("repeat-scan OTP shortcut", () => {
+  beforeEach(() => { apiMock.mockReset(); });
+  function shortcut() {
+    render(<StrictMode><MemoryRouter initialEntries={["/deliveries/card-1?otp=1"]}><Routes><Route path="/deliveries/:id" element={<DeliveryDetailPage />} /></Routes></MemoryRouter></StrictMode>);
+  }
+  it("sends once and opens verification when a scanned card has no OTP yet", async () => {
+    apiMock.mockImplementation(async path => path.includes("send-otp") ? { card: otpSentCard } : custodyCard);
+    shortcut();
+    expect(await screen.findByText("OTP Verification")).toBeInTheDocument();
+    expect(apiMock.mock.calls.filter(([path]) => path.includes("send-otp"))).toHaveLength(1);
+  });
+  it("opens an existing OTP without sending another code", async () => {
+    apiMock.mockResolvedValue(otpSentCard);
+    shortcut();
+    expect(await screen.findByText("OTP Verification")).toBeInTheDocument();
+    expect(apiMock.mock.calls.filter(([path]) => path.includes("send-otp"))).toHaveLength(0);
+  });
+});

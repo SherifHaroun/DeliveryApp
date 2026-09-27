@@ -6,6 +6,7 @@ import { maskEmail } from "./mask.js";
 import { OTP_MAX_ATTEMPTS, OTP_RESEND_COOLDOWN_SECONDS } from "./otp.js";
 
 export const CARD_STATUSES = {
+  CANCELLED: "CANCELLED",
   PENDING: "PENDING",
   IN_CUSTODY: "IN_CUSTODY",
   OTP_SENT: "OTP_SENT",
@@ -63,6 +64,7 @@ export function serializeCard(
     assignedAt: card.scannedAt,
     otpSentAt: card.otpSentAt,
     deliveredAt: card.deliveredAt,
+    cancellation: card.cancellation ?? null,
     createdAt: card.createdAt,
     updatedAt: card.updatedAt,
     customer: {
@@ -158,6 +160,7 @@ export async function findCardByQr(qrToken: string) {
 }
 
 export function assertScanAccess(card: CardWithRelations, courierId: string) {
+  if (card.status === CARD_STATUSES.CANCELLED) throw new HttpError(400, "This delivery has been cancelled.");
   if (card.status === CARD_STATUSES.DELIVERED) {
     throw new HttpError(400, "Card has already been delivered.");
   }

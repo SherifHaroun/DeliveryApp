@@ -125,3 +125,13 @@ Copy `backend/.env.example` to `backend/.env`. Never commit `backend/.env`.
 The backend uses Prisma with PostgreSQL. On Railway, the Postgres plugin provides `DATABASE_URL` automatically — do not hardcode a production URL.
 
 Production start runs `prisma migrate deploy` before the API, which creates the required tables.
+
+## Repeat scans and cancellation
+
+Scanning an active card already assigned to the courier shows **Already scanned**. The OTP button opens verification directly; if no OTP has been sent yet, it sends one using the existing email flow. An existing OTP is reused.
+
+Couriers can cancel an active delivery by entering a reason and allowing a fresh device location capture. Cancellation requires coordinates, accuracy and a recent capture timestamp; permission denial or location failure leaves the delivery active. The saved record includes the server cancellation time, courier identity and customer address snapshot. Cancellation invalidates outstanding OTPs and prevents further scan, send or verify actions on that card.
+
+The courier dashboard includes **Cancelled Cards**, linking to the cancelled deliveries filter. Each record shows the reason, courier, timestamps, location accuracy and a map link. Reporting follows the existing signed-in courier scope. Device-reported location is evidence for review, not independently verified proof of presence. Customer records currently contain addresses rather than GPS coordinates, so automatic distance comparison is not available.
+
+The additive database migration adds a nullable cancellation JSON record to Card. The existing production start command applies it before starting the backend. Deploy the updated backend before the frontend. These changes do not require new email configuration.

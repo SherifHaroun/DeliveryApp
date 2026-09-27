@@ -28,3 +28,5 @@
 html[data-theme="dark"] .pending {
   background: #243044;
 }
+
+.cancelled { color: #9f1239; background: #ffe4e6; }

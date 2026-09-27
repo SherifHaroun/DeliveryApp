@@ -33,6 +33,8 @@ export function activityLabel(action: string) {
       return "OTP Verification Failed";
     case "OTP_VERIFIED":
       return "OTP Verified";
+    case "CANCELLED":
+      return "Cancelled";
     case "DELIVERED":
       return "Delivery Completed";
     default:
@@ -48,6 +50,8 @@ export function statusLabel(status: string) {
       return "In Your Custody";
     case "OTP_SENT":
       return "OTP Sent";
+    case "CANCELLED":
+      return "Cancelled";
     case "DELIVERED":
       return "Delivered";
     default:

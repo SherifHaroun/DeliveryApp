@@ -5,6 +5,7 @@ export const ACTIVITY = {
   OTP_FAILED: "OTP_FAILED",
   OTP_VERIFIED: "OTP_VERIFIED",
   DELIVERED: "DELIVERED",
+  CANCELLED: "CANCELLED",
 } as const;
 
 export function activityLabel(action: string) {
@@ -20,6 +21,8 @@ export function activityLabel(action: string) {
       return "OTP Verification Failed";
     case ACTIVITY.OTP_VERIFIED:
       return "OTP Verified";
+    case ACTIVITY.CANCELLED:
+      return "Delivery Cancelled";
     case ACTIVITY.DELIVERED:
       return "Delivery Completed";
     default:
@@ -40,6 +43,8 @@ export function activitySummary(action: string) {
       return "OTP verification failed";
     case ACTIVITY.OTP_VERIFIED:
       return "OTP verified";
+    case ACTIVITY.CANCELLED:
+      return "Delivery Cancelled";
     case ACTIVITY.DELIVERED:
       return "Card delivered";
     default:

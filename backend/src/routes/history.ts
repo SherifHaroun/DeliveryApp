@@ -52,7 +52,7 @@ historyRouter.get(
               ? "In Custody"
               : row.card.status === CARD_STATUSES.OTP_SENT
                 ? "OTP Sent"
-                : "Delivered",
+                : row.card.status === CARD_STATUSES.CANCELLED ? "Cancelled" : "Delivered",
       })),
     );
   }),

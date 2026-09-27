@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { CancelDelivery, CancellationReceipt } from "../components/ui/CancelDelivery";
 import { api, ApiError } from "../api/client";
 import type { DeliveryCard as DeliveryCardType } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
@@ -16,11 +17,14 @@ import styles from "./DeliveryDetail.module.css";
 export function DeliveryDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const otpShortcutUsed = useRef(false);
   const { user } = useAuth();
   const [card, setCard] = useState<DeliveryCardType | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [cancellationBusy, setCancellationBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [tick, setTick] = useState(0);
   const loadGeneration = useRef(0);
@@ -43,8 +47,14 @@ export function DeliveryDetailPage() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (!card || searchParams.get("otp") !== "1" || otpShortcutUsed.current) return;
+    otpShortcutUsed.current = true;
+    if (card.status === "IN_CUSTODY") void sendOtp();
+  }, [card, searchParams]);
+
   async function sendOtp() {
-    if (!id || sendLock.current || busy) return;
+    if (!id || sendLock.current || busy || cancellationBusy) return;
     sendLock.current = true;
     setBusy(true);
     setError(null);
@@ -71,7 +81,7 @@ export function DeliveryDetailPage() {
 
   async function verifyOtp(event: FormEvent) {
     event.preventDefault();
-    if (!id) return;
+    if (!id || busy || cancellationBusy) return;
     setBusy(true);
     setError(null);
     setMessage(null);
@@ -105,6 +115,11 @@ export function DeliveryDetailPage() {
   const otp = card.otp;
   const canResend =
     !otp || otp.expired || otp.locked || new Date(otp.resendAvailableAt).getTime() <= Date.now();
+
+  if (card.status === "CANCELLED") return <div className={styles.page}>
+    <PageHeader title="Delivery Cancelled" backTo="/deliveries?status=CANCELLED" />
+    <section className={styles.panel}><CardFacts card={card} /><CancellationReceipt card={card} /></section>
+  </div>;
 
   if (card.status === "DELIVERED") {
     const deliveredBy = card.courier?.fullName?.trim() || user?.fullName || "—";
@@ -154,7 +169,7 @@ export function DeliveryDetailPage() {
         <section className={styles.panel}>
           <CardFacts card={card} />
           {error ? <p className="banner-error">{error}</p> : null}
-          <Button type="button" block loading={busy} disabled={busy} onClick={() => void sendOtp()}>
+          <Button type="button" block loading={busy} disabled={busy || cancellationBusy} onClick={() => void sendOtp()}>
             {busy ? "Sending OTP..." : "Send OTP"}
           </Button>
         </section>
@@ -199,12 +214,12 @@ export function DeliveryDetailPage() {
               variant="success"
               block
               loading={busy}
-              disabled={code.length !== 6 || Boolean(otp?.expired) || Boolean(otp?.locked)}
+              disabled={busy || cancellationBusy || code.length !== 6 || Boolean(otp?.expired) || Boolean(otp?.locked)}
             >
               {busy ? "Verifying..." : "Verify OTP"}
             </Button>
           </form>
-          <Button type="button" variant="ghost" block disabled={busy || !canResend} onClick={() => void sendOtp()}>
+          <Button type="button" variant="ghost" block disabled={busy || cancellationBusy || !canResend} onClick={() => void sendOtp()}>
             {!canResend && otp ? (
               <>
                 Resend OTP in{" "}
@@ -223,6 +238,10 @@ export function DeliveryDetailPage() {
           <span className={styles.srOnly}>{tick}</span>
         </section>
       ) : null}
+      {card.status === "IN_CUSTODY" || card.status === "OTP_SENT" ? <CancelDelivery cardId={card.id} onBusyChange={setCancellationBusy} disabled={busy} onCancelled={updated => {
+        loadGeneration.current += 1;
+        setCard(updated); setCode(""); setMessage(null); setError(null);
+      }} /> : null}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { StatusBadge } from "./StatusBadge";
 import styles from "./DeliveryCard.module.css";
 
 export function DeliveryCard({ card }: { card: DeliveryCardType }) {
-  const when = card.deliveredAt ?? card.otpSentAt ?? card.scannedAt ?? card.updatedAt;
+  const when = card.cancellation?.cancelledAt ?? card.deliveredAt ?? card.otpSentAt ?? card.scannedAt ?? card.updatedAt;
 
   return (
     <Link to={`/deliveries/${card.id}`} className={styles.card}>
