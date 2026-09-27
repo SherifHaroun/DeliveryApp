@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Volume2 } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { PageHeader } from "../components/ui/PageHeader";
 import { SettingsGroup } from "../components/ui/SettingsGroup";
@@ -58,21 +59,23 @@ export function ScanPreferencesPage() {
     <div>
       <PageHeader title="Scan Preferences" backTo="/profile" />
 
+      <div className={styles.preferencesGrid}>
       <SettingsGroup title="Scan Feedback">
         <div className={styles.prefRow}>
           <span>Sound</span>
+          <div className={styles.soundControls}>
+            <button type="button" className={styles.soundPreview} disabled={!prefs.sound || testingSound} onClick={() => void testSound()}>
+              <Volume2 size={16} aria-hidden="true" />
+              {testingSound ? "Testing…" : "Test sound"}
+            </button>
           <Toggle
             label="Sound"
             checked={prefs.sound}
             onChange={(sound) => setPrefs({ ...prefs, sound })}
           />
+          </div>
         </div>
-        <div style={{ padding: "0 4px 16px" }}>
-          <Button type="button" variant="ghost" disabled={!prefs.sound || testingSound} onClick={() => void testSound()}>
-            {testingSound ? "Testing sound…" : "Test sound"}
-          </Button>
-          {soundMessage ? <p role="status" style={{ marginTop: 10 }}>{soundMessage}</p> : null}
-        </div>
+        {soundMessage ? <p className={styles.soundMessage} role="status">{soundMessage}</p> : null}
         <div className={styles.prefRow}>
           <span>Vibration</span>
           <Toggle
@@ -105,6 +108,7 @@ export function ScanPreferencesPage() {
           )}
         </div>
       </SettingsGroup>
+      </div>
     </div>
   );
 }

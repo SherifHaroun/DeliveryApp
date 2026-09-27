@@ -26,7 +26,7 @@ export function ProfilePage() {
   }
 
   return (
-    <div>
+    <div className={styles.profileGrid}>
       <header className={styles.hero}>
         <p className={styles.pageTitle}>Profile</p>
         <span className={styles.avatar}>{initials(profile.fullName)}</span>
