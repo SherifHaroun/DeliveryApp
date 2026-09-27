@@ -3,7 +3,7 @@ import { Button } from "../components/ui/Button";
 import { PageHeader } from "../components/ui/PageHeader";
 import { SettingsGroup } from "../components/ui/SettingsGroup";
 import { Toggle } from "../components/ui/Toggle";
-import { useScanPrefs } from "../theme/ScanPrefsContext";
+import { playScanSound, useScanPrefs } from "../theme/ScanPrefsContext";
 import styles from "./Profile.module.css";
 
 type PermissionState = "granted" | "denied" | "prompt" | "unknown";
@@ -12,6 +12,21 @@ export function ScanPreferencesPage() {
   const { prefs, setPrefs } = useScanPrefs();
   const [permission, setPermission] = useState<PermissionState>("unknown");
   const [requesting, setRequesting] = useState(false);
+  const [soundMessage, setSoundMessage] = useState("");
+  const [testingSound, setTestingSound] = useState(false);
+
+  async function testSound() {
+    setTestingSound(true);
+    setSoundMessage("");
+    try {
+      await playScanSound();
+      setSoundMessage("If you did not hear the beep, check your phone volume, Silent Mode, and connected headphones.");
+    } catch {
+      setSoundMessage("Sound could not play. Refresh the page, check your connection, and tap Test sound again.");
+    } finally {
+      setTestingSound(false);
+    }
+  }
 
   const refreshPermission = useCallback(async () => {
     try {
@@ -51,6 +66,12 @@ export function ScanPreferencesPage() {
             checked={prefs.sound}
             onChange={(sound) => setPrefs({ ...prefs, sound })}
           />
+        </div>
+        <div style={{ padding: "0 4px 16px" }}>
+          <Button type="button" variant="ghost" disabled={!prefs.sound || testingSound} onClick={() => void testSound()}>
+            {testingSound ? "Testing sound…" : "Test sound"}
+          </Button>
+          {soundMessage ? <p role="status" style={{ marginTop: 10 }}>{soundMessage}</p> : null}
         </div>
         <div className={styles.prefRow}>
           <span>Vibration</span>

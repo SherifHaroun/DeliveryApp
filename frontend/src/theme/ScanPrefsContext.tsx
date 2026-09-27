@@ -53,10 +53,12 @@ export function ScanPrefsProvider({ children }: { children: ReactNode }) {
       } catch { /* Audio support is optional. */ }
     };
     try { void prepareScanSound().catch(() => undefined); } catch { /* Audio support is optional. */ }
-    window.addEventListener("pointerdown", unlock);
+    window.addEventListener("click", unlock);
+    window.addEventListener("touchend", unlock);
     window.addEventListener("keydown", unlock);
     return () => {
-      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("click", unlock);
+      window.removeEventListener("touchend", unlock);
       window.removeEventListener("keydown", unlock);
     };
   }, [prefs.sound]);
@@ -90,17 +92,27 @@ export function playScanFeedback(prefs: ScanPrefs) {
     // Feedback is optional; scanning should continue even if it fails.
   }
   if (!prefs.sound) return;
+  void playScanSound().catch(() => undefined);
+}
+
+export async function playScanSound() {
+  const buffer = prepareScanSound();
+  const context = audioContext!;
+  // Resume synchronously within the tap handler, before waiting for decoding.
+  let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
-    const buffer = prepareScanSound();
-    const context = audioContext!;
-    void Promise.all([buffer, context.resume()]).then(([decoded]) => {
-      const source = context.createBufferSource();
-      source.buffer = decoded;
-      source.connect(context.destination);
-      source.onended = () => source.disconnect();
-      source.start();
-    }).catch(() => undefined);
-  } catch {
-    // An unavailable sound must never interrupt a scan.
+    const [decoded] = await Promise.race([
+      Promise.all([buffer, context.resume()]),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => reject(new Error("Sound playback unavailable")), 5000);
+      }),
+    ]);
+    const source = context.createBufferSource();
+    source.buffer = decoded;
+    source.connect(context.destination);
+    source.onended = () => source.disconnect();
+    source.start();
+  } finally {
+    clearTimeout(timeout);
   }
 }
