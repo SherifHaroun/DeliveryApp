@@ -211,7 +211,7 @@ export function ScanPage() {
             <h2>{alreadyScanned ? "Already scanned" : "Card Found ✓"}</h2>
             {alreadyScanned ? <p>This card is already in your custody. Do you want to continue to OTP verification?</p> : null}
             <CardFacts card={card} />
-            <Button block onClick={() => navigate(`/deliveries/${card.id}${alreadyScanned ? "?otp=1" : ""}`)}>
+            <Button block onClick={() => navigate(`/deliveries/${card.id}?otp=1`)}>
               {card.status === "OTP_SENT" ? "Enter OTP" : "Send OTP"}
             </Button>
           </section>

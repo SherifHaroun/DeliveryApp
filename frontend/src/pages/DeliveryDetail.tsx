@@ -158,6 +158,15 @@ export function DeliveryDetailPage() {
     );
   }
 
+  if (card.status === "IN_CUSTODY" && searchParams.get("otp") === "1" && !error) {
+    return <div className={styles.page}>
+      <PageHeader title="OTP Verification" backTo="/deliveries" />
+      <section className={styles.panel} role="status" aria-live="polite">
+        <p>Sending OTP to the customer's registered email…</p>
+      </section>
+    </div>;
+  }
+
   return (
     <div className={styles.page}>
       <PageHeader
